@@ -39,6 +39,7 @@ class PathwayTest(TestCase):
     def test_pathway_add(self):
         print "\nTest     | PathwayNetwork  | pathway_add\t",
         self.pathway.add_pathway('R19999', False, "TestL", "1", "TestR", "BIOMASS")
+	print self.pathway.reactions['R19999']
         self.assertEqual(self.pathway.reactions['R19999'].ko, False)
     
     def test_pathway_update(self):
@@ -107,13 +108,21 @@ class UserViewTest(TestCase):
     
     def test_login(self):
         print "\nTest     | UserView        | /user/login/\t",
-        response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
+        response = self.client.post('/user/add/', {'username': 'eric', 'password': '123'})
+        self.assertEquals(200, response.status_code)
+        self.assertEqual("Successfully added", response.content)
+
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Successfully Login") != -1)
     
     def test_logout(self):
         print "\nTest     | UserView        | /user/logout/\t",
-        response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
+        response = self.client.post('/user/add/', {'username': 'eric', 'password': '123'})
+        self.assertEquals(200, response.status_code)
+        self.assertEqual("Successfully added", response.content)
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
+
         response = self.client.get('/user/logout/')
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Logout successfully") != 1)
@@ -123,7 +132,11 @@ class UserViewTest(TestCase):
     def test_summary(self):
         return  # skipped for now
         print "\nTest     | UserView        | /user/summary/\t",
-        response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
+        response = self.client.post('/user/add/', {'username': 'eric', 'password': '123'})
+        self.assertEquals(200, response.status_code)
+        self.assertEqual("Successfully added", response.content)
+
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         self.assertEquals(response.status_code, 200)
         response = self.client.get('/collection/create/', {'collection_name': 'demo1', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         self.assertEquals(response.status_code, 200)
@@ -147,10 +160,14 @@ class UserViewTest(TestCase):
     
     def test_change_pwd(self):
         print "\nTest     | UserView        | /user/password/change/\t",
-        response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
+        response = self.client.post('/user/add/', {'username': 'eric', 'password': '123'})
+        self.assertEquals(200, response.status_code)
+        self.assertEqual("Successfully added", response.content)
+
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.post('/user/password/change/', {'newpassword':'1234'})
         response = self.client.get('/user/logout/')
-        response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '1234'})
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '1234'})
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Successfully Login") != -1)
     

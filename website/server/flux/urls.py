@@ -1,5 +1,4 @@
-from django.conf.urls.defaults import *
-from django.core.management import setup_environ
+from django.conf.urls import patterns
 from django.contrib import auth
 
 #from view.pathway_view import pathway_add
