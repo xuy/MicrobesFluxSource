@@ -9,6 +9,9 @@ try:
 except:
     import elementtree.ElementTree as ET
 
+import logging
+logger = logging.getLogger('default')
+
 class Metabolism:
     def __init__(self, f = None):
         self.title = ''
@@ -169,7 +172,7 @@ class Metabolism:
         for entry in tree.getiterator('entry'):
             t = entry.get('type')
             if not t:
-                print entry
+                # print entry
                 continue
             if t == 'compound':
                 self.__parse_compound(entry)
@@ -182,7 +185,7 @@ class Metabolism:
             elif t == 'group':
                 self.__parse_group(entry)
             else:
-                print "[WARN] Unknown entry type >>>", t, "<<< Ignored"
+                logger.warning("Unknown entry type '" + t + "' in KGML. It will be ignored.")
     
     def __readfile(self, xmlfile):
         # print "=== Processing file", xmlfile, "======"

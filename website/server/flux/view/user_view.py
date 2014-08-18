@@ -6,8 +6,8 @@ from django.contrib.auth.views import password_reset, password_change, password_
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from django.http import HttpResponse
-from flux.view.json import Json
-from flux.view.foundations import *
+from view.json import Json
+from view.foundations import *
 
 from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart

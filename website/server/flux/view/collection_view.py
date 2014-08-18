@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.core.files import File
 from django.core.files.base import ContentFile
-from flux.view.foundations import *
+from django.core.files.storage import default_storage
+from view.foundations import *
 
 def get_collection_list(u):
     p = Profile.objects.filter(user = u)
@@ -42,7 +43,8 @@ def save_collection_to_disk(u, collection_name, obj):
     # print "user", p.user
     # print "to save", p.name
     file_content = ContentFile(cPickle.dumps(obj))
-    p.diskfile.save(p.name, file_content, save = True)
+    default_storage.delete(p.name)
+    p.diskfile.save(p.name, file_content, save = True)	# save the new file.
 
 @login_required
 def collection_save(request):  # actually SaveAs, the same as save
@@ -67,7 +69,7 @@ def collection_create(request):
     if not profile:
         if bac_name == "TOY":
             import cPickle
-            f = open("/Users/xuy/PlayGround/MicrobesFluxSource/website/server/flux/toy/toy_pathway.pickle", "rb")
+            f = open("/research-www/engineering/tanglab/flux/toy/toy_pathway.pickle", "rb")
             p = cPickle.load(f)
         else:
             p = generate_pathway(bac_name, collection_name)

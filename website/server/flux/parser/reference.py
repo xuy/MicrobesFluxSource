@@ -1,11 +1,12 @@
+import logging
+import pprint
 from alias import *
+logger = logging.getLogger("default")
+
 """ 
     Singleton class 
     using the Borg design pattern
 """
-
-import pprint
-
 class ReactionDB(object):
     __hivemind = {} 
 
@@ -31,9 +32,7 @@ class ReactionDB(object):
             cpd_alias = self.compound_alias.get(compound_short_name, self.IMPOSSIBLE_STR)
             r = self.compound_long_name.get(cpd_alias, self.IMPOSSIBLE_STR)
         if r == self.IMPOSSIBLE_STR:
-            # TODO(xuy): use logging framework
-	    pass
-            # print "[WARN] Can't find long name for -> \'" + compound_short_name + "'"
+            logger.warning("Can't find long name for -> \'" + compound_short_name + "'")
         return r
         
     def get_stoichiometry(self, reaction_name, molecular_name):
@@ -42,12 +41,12 @@ class ReactionDB(object):
         if a == self.IMPOSSIBLE:
             cpd_alias = self.compound_alias.get(molecular_name, self.IMPOSSIBLE)
             if cpd_alias == self.IMPOSSIBLE:
-                # print "[WARN] Record not found (R,C)", reaction_name, molecular_name
+                logger.warning("Record not found (R,C)  " +  reaction_name + " " +  molecular_name)
                 return self.IMPOSSIBLE
             else:
                 a = self.reaction_compound_relation.get((reaction_name, cpd_alias), self.IMPOSSIBLE)
         if a == self.IMPOSSIBLE:
-            # print "[WARN] Record not found (R,C)", reaction_name, molecular_name
+            logger.warning("[WARN] Record not found (R,C) " +  reaction_name + " " +  molecular_name)
             return self.IMPOSSIBLE
         return a
 

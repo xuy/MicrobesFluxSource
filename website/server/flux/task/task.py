@@ -74,10 +74,7 @@ def generate_report(name, suffix):
     fampl_result = fs.open(amplresult, "r")
     fl = fampl_result.xreadlines()
     for l in fl:
-        print "Read l is", l
-        
         temp = l.split()
-        print " temp is ", temp
         if len(temp) == 2 and l[0]=="V":
             name, value = l.split()
             finaloutput.write(d[name])
@@ -119,6 +116,16 @@ def task_add(request):
     t = Task(task_type = t_type, main_file = t_file, email = t_email, additional_file = t_addif, status = "TODO")
     t.save()
     return HttpResponse(content = """ Task added  """, status = 200, content_type = "text/html")
+
+def task_unmark(request):
+    tid = request.GET['tid']
+    try:
+        to_mark = Task.objects.get(task_id = tid)
+        to_mark.status = "TODO"
+        to_mark.save()
+        return HttpResponse(content = "Task Un-marked", status = 200, content_type = "text/html")
+    except Task.DoesNotExist:
+        return HttpResponse(content = "No such task", status = 200, content_type = "text/html")
 
 def task_mark(request):
     tid = request.GET['tid']

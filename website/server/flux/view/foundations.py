@@ -1,6 +1,6 @@
-from flux.parser.keggpathway import PathwayNetwork
-from flux.constants import kegg_database
-from flux.view.json import Json
+from parser.keggpathway import PathwayNetwork
+from constants import kegg_database
+from view.json import Json
 
 from django.http import HttpResponse
 import os

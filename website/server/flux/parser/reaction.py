@@ -1,4 +1,4 @@
-from flux.view.json import Json
+from view.json import Json
 
 """
     # TODO
@@ -36,9 +36,8 @@ class Reaction:
     def __repr__(self):
         return self.name + str(self.reversible) + ' '.join(map(str, self.products)) + ' '.join(map(str, self.substrates))
 
-    # TODO: later this => long name has to lookup the whole kegg
     def _get_long_name(self, s):
-        # print "In R1, get long name for ", s
+        """ Get the descriptive name for a compound """	
         if self.longname_map.has_key(s):
             return self.longname_map[s]
         else:
@@ -47,7 +46,8 @@ class Reaction:
     def set_metabolism_name(self, m):
         self.metabolism = m
     
-    #### Used by Report. 
+    """ Generate a human-readable string that represents this reaction.
+    	This function is used by Report. """
     def quick_view(self):
         l = []
         if self.ko:
@@ -56,16 +56,33 @@ class Reaction:
             l.append("   ")
         l.append(self.name)
         l.append(" : ")
-        l.append(' + '.join(map(str, self.substrates)))
+        s = []
+        for t in self.substrates:
+            s.append(str(self.stoichiometry[t]) + ' ' + self._get_long_name(t))
+        l.append(' + '.join(s))
         if self.reversible:
             l.append(' <--> ')
         else:
             l.append(' ---> ')
-        l.append(' + '.join(map(str, self.products)))
+        s = []
+        for t in self.products:
+            s.append(str(self.stoichiometry[t]) + ' ' + self._get_long_name(t))
+        l.append(' + '.join(s))
         return ''.join(l)
-        
+
+    def get_substrates_as_long_names(self):
+        r = []
+        for t in self.substrates:
+            r.append(str(self._get_long_name(t)))
+        return r
+    def get_products_as_long_names(self):
+        r = []
+        for t in self.products:
+            r.append(str(self._get_long_name(t)))
+        return r
+
     def getJson(self):
-        """ Return a JSON object """
+        """ Return a JSON object representing this reaction. """
         r = Json("object")
         r.add_pair("reactionid", self.name)
         s = []

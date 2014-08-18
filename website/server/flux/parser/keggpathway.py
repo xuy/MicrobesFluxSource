@@ -11,7 +11,7 @@ from compounddb import CompoundDB
 from enzyme import Enzyme
 from reaction import Reaction
 from metabolism import Metabolism
-from flux.view.json import Json
+from view.json import Json
 
 # Model View Controller
 class OptimizationModel:
@@ -21,16 +21,31 @@ class OptimizationModel:
         self.constraints = None
         self.bounds = None
         self.objective = None
+        self.compounddb = CompoundDB()
     
     def json_view(self):
         pass
-    
+   
+    def normalize_for_ampl(self, s):
+        """ AMPL has a strict syntax for identifiers"""
+        result = []
+        illegal_symbols = ['+','-','=','/','(',')',',','[',']']
+	for i in s:
+            if i.isalnum():
+                result.append(i)
+            else:
+                result.append("_")
+        r = ''.join(result)
+        if r[0] in '0123456789':
+          r = "C_" + r
+        return r
+ 
     def ampl_view(self, f, mapfile, model_type="fba", additional_file = None):
         """ Output an AMPL file """
         print "In AMPL VIEW", model_type
         for var in self.variable:
             name = self.variable[var]
-            mapfile.write(name)
+            mapfile.write(self.compounddb.get_long_name(name))
             mapfile.write(" ")
             mapfile.write(var)
             mapfile.write("\n")
@@ -60,9 +75,12 @@ class OptimizationModel:
         
         # Replace RXXXX to VXXXX in the SV=0 representation
         f.write("# Constraints\n")
+        constraint_names = {}
         for compound in self.constraints:
             if compound.endswith(".ext"):
                 continue
+            if 'BIOMASS' in compound:
+                continue   # Ignore all constraints on BIOMASS
             linear_equation = self.constraints[compound]
             if len(linear_equation) == 0:
                 continue
@@ -74,11 +92,10 @@ class OptimizationModel:
                 if var:
                     target.append(' '.join(content[:-1]) + " * " + var)
             if len(target) > 0:
-                tempc = str(compound)
-                tempc = tempc.replace("-", "_")
-                tempc = tempc.replace("+", "_")
-                tempc = tempc.replace("*", "_")
-                tempc = tempc.replace("/", "_")
+                tempc = self.normalize_for_ampl(self.compounddb.get_long_name(str(compound)))
+                while constraint_names.has_key(tempc):
+                    tempc = tempc + "_x"
+                constraint_names[tempc] = True 
                 f.write("subject to " + tempc + ":\n")
                 f.write("\t")
                 f.write(' '.join(target))
@@ -98,15 +115,19 @@ class OptimizationModel:
             v_position = {}
             count = 1
             for l in additional_file.readlines():
-                f.write('printf "===== Data Point ' + str(count) + ' ====\\n";\n')
-                count +=1 
+                if l[0] == "#":
+                    continue
                 l = l[:-1]
                 values = l.split()
+                if not len(values):
+                    continue
+                f.write('printf "===== Data Point ' + str(count) + ' ====\\n";\n')
+                count +=1 
                 for v in values:
                     v.strip()
                 f.write("""# DFBA part \n""")
+                # pprint(self.variable)
                 for i, v in enumerate(header):
-                    print i, v
                     f.write("fix " + self.variable[v] + ":=" + values[i] + ";\n")
                 f.write("solve > /dev/null ;\n");
                 f.write("""printf "Objective function value %6.6f\\n", Obj;  \n""")
@@ -232,24 +253,34 @@ class PathwayNetwork(object):
         
         r.substrates.extend(left_comp)
         r.products.extend(right_comp)
-        print "[Add pathway] The substrates are ", r.substrates
-        print "[Add pathway] The products are ", r.products
+        #print "[Add pathway] The substrates are ", r.substrates
+        #print "[Add pathway] The products are ", r.products
         
         for i in xrange(len(left_coef)):
             r.stoichiometry[left_comp[i]] = left_coef[i]
         
         for i in xrange(len(right_coef)):
             r.stoichiometry[right_comp[i]] = right_coef[i]
-        print "[Add pathway] r.stoichiometry is ", r.stoichiometry
-        print "Get external arrow is ", arrow
+        #print "[Add pathway] The stoichiometry is ", r.stoichiometry
+        #print "Get external arrow is ", arrow
         r.reversible = arrow
         r.arrow = arrow
-        if ko == "false":
+        #print "external ko is ", ko
+        #print type(ko)
+        #print type(ko) == type("")
+        if ko == True:
+            r.ko = True
+        elif ko == False:
+            r.ko = False
+        elif 'false' in ko:
+        # elif type(ko) == type("") and ko.lower() == "false":
             r.ko = False
         else:
             r.ko = True
+	#print "In pathway, choose ko as ", r.ko
         r.metabolism = mname
         r.active = True
+        print "The final reaction as JSON is", r.getJson()
         return r
 
     def __invalidate_cached_bounds(self):
@@ -300,8 +331,10 @@ class PathwayNetwork(object):
             for name in self.reactions:
                 rec = self.reactions[name]
                 for t in rec.substrates:
+                    if t.endswith(".ext"): continue
                     self.sv[t].append(" + " + str(rec.stoichiometry[t]) + " " + rec.name)
                 for t in rec.products:
+                    if t.endswith(".ext"): continue
                     self.sv[t].append(" - " + str(rec.stoichiometry[t]) + " " + rec.name)
         return self.sv
 
@@ -443,7 +476,6 @@ class PathwayNetwork(object):
         c=m.createCompartment()
         c.setId("cell")
         c.setName("cell")
-        
         species = set()
         for n in self.reactions:
             r = self.reactions[n]
@@ -469,15 +501,15 @@ class PathwayNetwork(object):
             if r.metabolism.find("BIOMASS") != -1:
                 tempr.setAnnotation("<microbesflux:user-reaction xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">BIOMASS</microbesflux:user-reaction>")
             
-            for reactant in r.substrates:
-                species.add(reactant)
+            for reactant, reactant_long in zip(r.substrates, r.get_substrates_as_long_names()):
+                species.add(reactant_long)
                 temp_reac = tempr.createReactant()
-                temp_reac.setSpecies(reactant)
+                temp_reac.setSpecies(reactant_long)
                 temp_reac.setStoichiometry(r.stoichiometry[reactant])
-            for product in r.products:
-                species.add(product)
+            for product, product_long in zip(r.products, r.get_products_as_long_names()):
+                species.add(product_long)
                 temp_prod = tempr.createProduct()
-                temp_prod.setSpecies(product)
+                temp_prod.setSpecies(product_long)
                 temp_prod.setStoichiometry(r.stoichiometry[product])
             tempr.setName(n)
         

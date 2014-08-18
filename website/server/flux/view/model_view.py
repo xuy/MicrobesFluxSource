@@ -1,12 +1,12 @@
-from flux.view.foundations import ajax_callback
-from flux.view.foundations import table_response_envelope
-from flux.view.foundations import response_envelope
-from flux.view.json import Json
+from view.foundations import ajax_callback
+from view.foundations import table_response_envelope
+from view.foundations import response_envelope
+from view.json import Json
 
 from time import gmtime, strftime
 from flux.models import Profile
 
-from flux.storage import usl # Unified Storage Library
+from storage import usl # Unified Storage Library
 import os
 
 ####################################################
@@ -19,7 +19,7 @@ def _process_object_update(input_params, pathway):
     reaction = str(input_params["r"])
     w        = input_params["w"]
     weight   = float(w)
-    pathway.objective[reaction] = weight 
+    pathway.objective[reaction] = weight
     r = Json()
     r.add_pair("pk", key)
     r.add_pair("r",  reaction)
@@ -29,6 +29,7 @@ def _process_object_update(input_params, pathway):
 # Done with New PK
 def _process_object_fetch(pathway):
     weights = pathway.get_objective_weights()
+    print len(pathway.objective)
     ret = Json("array")
     public_key = 1
     for name in pathway.reactions:
@@ -36,6 +37,8 @@ def _process_object_fetch(pathway):
         j.add_pair("pk", public_key)
         public_key +=1
         j.add_pair("r", name)
+        if name not in weights:
+            weight[name] = 1.0
         j.add_pair("w", str(weights[name]))
         ret.add_item(j)
     return ret
@@ -96,7 +99,11 @@ def _process_boundary_update(input_params, pathway):
 def user_obj_fetch(request):    # Merged
     """ Get the user-defined objective function weights"""
     pathway = request.session["collection"]
-    return _process_object_fetch(pathway)
+    # Save the session because fetch might change the underlying pathway
+    # if it is the first time fetch is called. We will init all weight to 1.
+    result = _process_object_fetch(pathway)
+    request.session.save()  
+    return result
 
 @ajax_callback
 @response_envelope
@@ -119,7 +126,11 @@ def sv_fetch(request):
 def user_bound_fetch(request):
     """ Get the upper and lower bound"""
     pathway = request.session["collection"]
-    return _process_boundary_fetch(pathway)
+    # Necessary because the first time boundary fetch is called on a
+    # pathway, we init the boundary.
+    result = _process_boundary_fetch(pathway)
+    request.session.save()
+    return result
 
 @ajax_callback
 @response_envelope
@@ -164,7 +175,7 @@ def svg(request):
     p = subprocess.Popen("/research-www/engineering/tanglab/flux/submit_job_to_cloud.sh " + n + " svg " + address , shell=True) 
     return HttpResponse(content = "SVG Task submitted", status = 200, content_type = "text/html")
 
-from flux.task.task import send_mail
+from task.task import send_mail
 
 def sbml(request):
     n = request.session["collection_name"]
@@ -176,7 +187,7 @@ def sbml(request):
     f.close()
     attachments = [ n + ".sbml"]
     send_mail(address, attachments, title="SBML") 
-    return HttpResponse(content = "SBML Task submitted", status = 200, content_type = "text/html")
+    return HttpResponse(content = "SBML file sent.", status = 200, content_type = "text/html")
 
 ### TODO: change the n here to usl system
 def optimization(request):
@@ -239,7 +250,10 @@ def check_user_upload_file_format(pathway, f):
             return False
     for lines in f:
         t = lines.strip(' ')
+        t = t.strip('\n')
         if len(t)==0:   # Skip empty line
+            continue
+        if t[0] == "#":
             continue
         try:            # see if they are all numbers
             numbers = map(float, lines.split())
