@@ -88,7 +88,6 @@ def process(db, i):
     db[(name, "_products_")] = []
     for l in left[:-1].split(' + '):
         k = l.split()
-        # print k
         if len(k) == 1:     # The coefficient is omitted, so assign it to 1
             if not is_poly(l):
                 asub = l.strip()
@@ -109,7 +108,6 @@ def process(db, i):
     # process the right part
     for r in right[1:-1].split(' + '):
         k = r.split()
-        # print k
         if len(k) == 1:
             if not is_poly(r):
                 aprod  = r.strip()
@@ -126,8 +124,6 @@ def process(db, i):
             else:
                 db[(name, aprod)] = 100 # toint(k[0])
             db[(name, "_products_")].append(aprod)
-    # print "Products", db[(name, "_products_")]
-    # print "Substrates", db[(name, "_substrates_")]
 
 """ 
 This function will return a dictionary with elements

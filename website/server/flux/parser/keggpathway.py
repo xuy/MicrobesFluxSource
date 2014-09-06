@@ -42,7 +42,6 @@ class OptimizationModel:
  
     def ampl_view(self, f, mapfile, model_type="fba", additional_file = None):
         """ Output an AMPL file """
-        print "In AMPL VIEW", model_type
         for var in self.variable:
             name = self.variable[var]
             mapfile.write(self.compounddb.get_long_name(name))
@@ -126,7 +125,6 @@ class OptimizationModel:
                 for v in values:
                     v.strip()
                 f.write("""# DFBA part \n""")
-                # pprint(self.variable)
                 for i, v in enumerate(header):
                     f.write("fix " + self.variable[v] + ":=" + values[i] + ";\n")
                 f.write("solve > /dev/null ;\n");
@@ -253,21 +251,14 @@ class PathwayNetwork(object):
         
         r.substrates.extend(left_comp)
         r.products.extend(right_comp)
-        #print "[Add pathway] The substrates are ", r.substrates
-        #print "[Add pathway] The products are ", r.products
         
         for i in xrange(len(left_coef)):
             r.stoichiometry[left_comp[i]] = left_coef[i]
         
         for i in xrange(len(right_coef)):
             r.stoichiometry[right_comp[i]] = right_coef[i]
-        #print "[Add pathway] The stoichiometry is ", r.stoichiometry
-        #print "Get external arrow is ", arrow
         r.reversible = arrow
         r.arrow = arrow
-        #print "external ko is ", ko
-        #print type(ko)
-        #print type(ko) == type("")
         if ko == True:
             r.ko = True
         elif ko == False:
@@ -277,10 +268,8 @@ class PathwayNetwork(object):
             r.ko = False
         else:
             r.ko = True
-	#print "In pathway, choose ko as ", r.ko
         r.metabolism = mname
         r.active = True
-        print "The final reaction as JSON is", r.getJson()
         return r
 
     def __invalidate_cached_bounds(self):
@@ -307,7 +296,6 @@ class PathwayNetwork(object):
     ####################################################
 
     def _get_objective(self):
-        # print "In get_objective",
         if len(self.objective) == 0:
             # Regenerate all reactions and objectives
             for r in self.reactions:
@@ -326,7 +314,6 @@ class PathwayNetwork(object):
     ####################################################
 
     def get_sv(self):
-        # print "Someone called GetSV"
         if len(self.sv) == 0:
             for name in self.reactions:
                 rec = self.reactions[name]
@@ -360,7 +347,6 @@ class PathwayNetwork(object):
         return self.bound
 
     def generate_constraints(self):
-        # print "Generate constraint called", len(self.sv)
         self.get_sv()
         self.model.constraints = self.sv    # a dictionary
 
@@ -369,21 +355,15 @@ class PathwayNetwork(object):
         self.compound_database = {}
         start = 0
         for name in self.reactions:
-            if name == "Inflow1" or name == "Outflow2":
-                print ">>>>>>>>> here" 
             r = self.reactions[name]
             if not r.active or r.ko:
                 continue
-            if name == "Inflow1" or name == "Outflow2":
-                print ">>>>>>>>> here2"
             if not self.variable_database.has_key(name):
                 self.variable_database[name] = "V" + str(start)
                 start +=1
         self.model.variable = self.variable_database
         
     def generate_objectives(self, objective_type):
-        # print "Generate Objective", len(self.objective)
-        # print "Generate Objective"
         if objective_type == "user":
             self._get_objective()
             self.model.objective = self.objective
@@ -397,7 +377,6 @@ class PathwayNetwork(object):
             self.model.objective["BIOMASS0"] = 1.0
         
     def generate_bounds(self):
-        # print "Generate Bound", len(self.bound)
         self.get_bounds()
         self.model.bounds = self.bound
 
@@ -463,8 +442,6 @@ class PathwayNetwork(object):
         
         
     def output_ampl(self, amplfile, mapfile, reportfile, model_type="fba", additional_file = None, objective_type = "user"):
-        
-        print "I get object type as", objective_type 
         model = self.generate_optimization_model(objective_type)
         self.output_model_report(reportfile)
         model.ampl_view(amplfile, mapfile, model_type, additional_file)

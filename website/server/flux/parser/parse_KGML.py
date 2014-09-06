@@ -50,12 +50,10 @@ def KGML2Graph(xmlfile, filter_by = ()):
         node_title = graphics.get('name')
         node_x = int(graphics.get('x'))  # Storing the original X and Y to recreate KEGG layout
         node_y = int(graphics.get('y'))
-        print "node is", node_title, "position is ", node_x, node_y 
 
         nodes[node_id] = (name, node_title, node_type)
         pathway.labels[node_id] = node_title
         pathway.add_node(node_id, xy=(node_x, node_y),ntype=node_type)
-        print pathway.node[node_id]
 
 
     for rel in tree.getiterator('relation'):
@@ -93,7 +91,6 @@ def plot_starlike(pathway):
 def plot_original(pathway):
     pos = {}
     for node1 in pathway.nodes():
-        print node1
         pos[node1] =  pathway.node[node1]['xy'] 
     pylab.figure()
     networkx.draw_networkx(pathway, pos, labels=pathway.labels)
@@ -124,7 +121,6 @@ if __name__ == '__main__':
     pathwayfile = args.pathwayfile
 
     (tree, pathway, nodes, genes) = KGML2Graph(pathwayfile)
-    print "read parse done"
     if args.draw_circular:
         logging.debug('plotting')
         plot_starlike(pathway)    

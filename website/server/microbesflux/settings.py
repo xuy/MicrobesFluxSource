@@ -91,6 +91,30 @@ LOGIN_URL = '/'
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'django.request':{
+            'handlers': ['console'],
+            'propagate': False,
+            'level': 'DEBUG',
+        },
+    },
+}
+
 try:
     from settings_local import *
 except ImportException:

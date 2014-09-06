@@ -29,7 +29,6 @@ class Metabolism:
         
         self.reaction_name_to_active_map = {}
         if f:
-            # print "[INFO] Read file", f
             self.__readfile(f)
     
     
@@ -118,23 +117,16 @@ class Metabolism:
         r = Reaction(rid)
         substrates = self.reactiondb.get_stoichiometry(rid, "_substrates_")
         products   = self.reactiondb.get_stoichiometry(rid, "_products_")
-        # print "Get RID", rid
-        # print "sub is", substrates
         if substrates == "None":
             return None
         for sub in substrates:
             stoichiometry[ sub ] = self.reactiondb.get_stoichiometry(rid, sub)
             longname_map[ sub ] = self.reactiondb.get_long_name(sub)
-            # print sub, self.reactiondb.get_long_name(sub)
             
-        # print 
         for prod in products:
-            # print '"' + prod + '"', '"'+ self.reactiondb.get_long_name(prod)+'"'
             stoichiometry[ prod ] = self.reactiondb.get_stoichiometry(rid, prod)
             longname_map[ prod ] = self.reactiondb.get_long_name( prod )
             
-        # print
-        # print "===="
         r.substrates = substrates
         r.products = products
         r.stoichiometry = stoichiometry
@@ -172,7 +164,6 @@ class Metabolism:
         for entry in tree.getiterator('entry'):
             t = entry.get('type')
             if not t:
-                # print entry
                 continue
             if t == 'compound':
                 self.__parse_compound(entry)
@@ -188,7 +179,6 @@ class Metabolism:
                 logger.warning("Unknown entry type '" + t + "' in KGML. It will be ignored.")
     
     def __readfile(self, xmlfile):
-        # print "=== Processing file", xmlfile, "======"
         tree = ET.parse(xmlfile)
         self.title = tree.getroot().get('title')  # human readable name
         # self.name = tree.getroot().get('name')    # like path:12301
