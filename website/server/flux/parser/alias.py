@@ -3,7 +3,7 @@
 import os
 import cPickle
 from helper import *
-from flux.constants import baseurl
+from flux.constants import appbase
 # from flux.models import Compound
 
 """ 
@@ -24,13 +24,13 @@ def tidy_name(raw_name):
 
 def read_compound_alias_database():
     final_data = None
-    if os.path.exists(baseurl + 'kegg/compound_lite.pk'):
-        final_data = read_pickle(baseurl + 'kegg/compound_lite.pk')
+    if os.path.exists(appbase + 'kegg/compound_lite.pk'):
+        final_data = read_pickle(appbase + 'kegg/compound_lite.pk')
     else:
         result = {}
         long_name = {}
         
-        cfile = open(baseurl + 'kegg/compound_lite', 'r')
+        cfile = open(appbase + 'kegg/compound_lite', 'r')
         l = linecrop(cfile)
         try:
             while (True):
@@ -63,7 +63,7 @@ def read_compound_alias_database():
         except StopIteration:
             pass
         final_data = (result, long_name)
-        write_pickle(data=final_data, file= baseurl + 'kegg/compound_lite.pk')
+        write_pickle(data=final_data, file= appbase + 'kegg/compound_lite.pk')
         # Now inserting things into database
     return final_data
         
@@ -131,15 +131,16 @@ This function will return a dictionary with elements
 """
 def read_reactions_database():
     result = {}
-    if os.path.exists(baseurl + 'kegg/reaction_lst.pk'):
-        result = read_pickle(baseurl + 'kegg/reaction_lst.pk')
+    reaction_list_name = appbase + 'kegg/reaction_lst.pk'
+    if os.path.exists(reaction_list_name):
+        result = read_pickle(reaction_list_name)
         return result
     else:
-        rfile = open(baseurl + 'kegg/reaction.lst', 'r')
+        rfile = open(reaction_list_name, 'r')
         for i in rfile:
             if i[0] == '#':
                 continue
             else:
                 process(result, i)
-        write_pickle(data = result, file = baseurl + 'kegg/reaction_lst.pk')
+        write_pickle(data = result, file = reaction_list_name)
         return result

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
-from constants import baseurl
+from constants import appbase
+# TODO: use media_base, not appbase
 
 """ This Profile model describes a user's optimization problem
 and pathway target
@@ -9,13 +10,13 @@ and pathway target
 class Profile(models.Model):
     name = models.CharField(max_length = 30)
     user = models.ForeignKey(User)
-    diskfile    = models.FileField(max_length=100, upload_to= baseurl + "temp")
+    diskfile    = models.FileField(max_length=100, upload_to=appbase + "temp")
     status      = models.CharField(max_length= 30)
     model_type  = models.CharField(max_length= 10)
     result_url  = models.URLField(max_length=200)
     submitted   = models.BooleanField(default=False)
     submitted_date = models.CharField(max_length=30)
-    dfba_file   = models.FileField(max_length=100, upload_to=baseurl + "temp")
+    dfba_file   = models.FileField(max_length=100, upload_to=appbase + "temp")
 
 class Compound(models.Model):
     name      = models.CharField(max_length = 10)
