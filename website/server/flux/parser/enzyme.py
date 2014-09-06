@@ -23,4 +23,3 @@ class Enzyme:
             if len(self.regulated_reactions) > 0:
                 last = str(len(variable_db))
                 variable_db[self.regulated_reactions_asstring] = "V" + last
-                #print self.genes_asstring, "====>", self.regulated_reactions_asstring, ":=>", variable_db[self.regulated_reactions_asstring]

@@ -169,7 +169,6 @@ def new_get_json(method, input_params, pathway):
     elif method == "model_sv":
         """ Output the SV=0 equations """
         sv = pathway.json_sv()
-        # print "In Model SV, Now SV is", len(pathway.sv)
         t = len(pathway.sv)
         input_params['startRows'] = '0'
         input_params['endRow'] = str(t - 1)
@@ -178,7 +177,6 @@ def new_get_json(method, input_params, pathway):
 
     elif method == "model_bound_fetch":
         bound = pathway.get_bounds_as_json()
-        # print "In Model bound, Now bound is", len(pathway.bound)
 
         t = len(pathway.reactions)
         input_params['startRows'] = '0'
@@ -189,16 +187,13 @@ def new_get_json(method, input_params, pathway):
     elif method == "model_bound_update":
         bound = pathway.get_bounds()
         key = str(input_params["pk"][0])
-        # print "key is", key
         if len(key) < 5:
             new_key = 'R' + '0' * (5 - len(key)) + key
         else:
             new_key = 'R' + key
-        # print new_key
         
         lb = float(input_params["l"][0].encode('ascii', 'ignore'))
         ub = float(input_params["u"][0].encode('ascii', 'ignore'))
-        # print lb, ub
         bound[new_key][0] = lb
         bound[new_key][1] = ub
         r += '"pk":"' + key + '",'

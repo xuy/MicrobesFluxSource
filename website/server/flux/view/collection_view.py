@@ -10,7 +10,6 @@ from django.core.files.storage import default_storage
 from flux.constants import baseurl
 from flux.view.foundations import *
 
-
 def get_collection_list(u):
     p = Profile.objects.filter(user = u)
     result = [x.name for x in p]
@@ -42,8 +41,6 @@ def save_collection_to_disk(u, collection_name, obj):
         p.user = u
         p.name = collection_name
         p.save()
-    # print "user", p.user
-    # print "to save", p.name
     file_content = ContentFile(cPickle.dumps(obj))
     default_storage.delete(p.name)
     p.diskfile.save(p.name, file_content, save = True)
@@ -143,7 +140,6 @@ def collection_info(request):
 def collection_select(request):
     """ Pick a particular collection "KeggPathway"""
     collection_name = request.GET['collection_name']
-    # print "Going to select collection", collection_name
     collection = get_collection_from_disk(request.user, collection_name)
     if collection:
         request.session['collection'] = collection
