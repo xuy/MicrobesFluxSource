@@ -9,11 +9,10 @@ class CompoundDB:
         except Compound.MultipleObjectsReturned:
             return False
         except Compound.DoesNotExist:
-            return False
+            pass
         try:
             c = Compound.objects.get(name__exact = n)
             if len(c.long_name) < 1:
-                print "Not found"
                 return False
             else:
                 return True
