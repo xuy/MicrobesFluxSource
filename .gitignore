@@ -1,6 +1,7 @@
 *.pyc
 sessionid*
 .idea/
+user_file/
 *.war
 atlassian-ide-plugin.xml
 client.iml

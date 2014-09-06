@@ -1,19 +1,14 @@
-from django.core.management import setup_environ
-import sys
-sys.path.append('/research-www/engineering/tanglab/')
-
-from flux import settings
-setup_environ(settings)
-
-from flux.models import Compound
-
 import cPickle
-from flux.constants import baseurl
+import sys, os
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "microbesflux.settings")
+
+from flux.constants import appbase
+from flux.models import Compound
 from flux.parser.helper import *
 
-
 def put_data_in():
-    data = read_pickle(baseurl + 'kegg/compound_lite.pk')
+    data = read_pickle(appbase + 'kegg/compound_lite.pk')
     alias = data[0]
     longname = data[1]
 
@@ -35,5 +30,3 @@ if __name__ == "__main__":
     query("C15064")
     long_name_query("Ethylmalonyl-CoA")
     long_name_query("H2O")
-    
-    
