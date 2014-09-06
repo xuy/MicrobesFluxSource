@@ -11,7 +11,7 @@ import os
 import cPickle
 
 import uuid
-from constants import baseurl
+from flux.constants import baseurl
 
 def write_pickle(data, filename):
     f = open(filename, 'wb')

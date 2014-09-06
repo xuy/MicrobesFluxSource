@@ -9,6 +9,5 @@ war/
 file_storage.pk
 demo_dfba_report.txt
 constants_local.py
-constants.py
-settings.py
+settings_local.py
 .DS_store

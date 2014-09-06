@@ -13,7 +13,7 @@ class Profile(models.Model):
     status      = models.CharField(max_length= 30)
     model_type  = models.CharField(max_length= 10)
     result_url  = models.URLField(max_length=200)
-    submitted   = models.BooleanField()
+    submitted   = models.BooleanField(default=False)
     submitted_date = models.CharField(max_length=30)
     dfba_file   = models.FileField(max_length=100, upload_to=baseurl + "temp")
 

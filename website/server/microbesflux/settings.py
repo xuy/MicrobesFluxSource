@@ -89,3 +89,9 @@ SESSION_FILE_PATH = '/Users/exu/PlayGround/MicrobesFluxSource/website/server/ses
 LOGIN_URL = '/'
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+try:
+    from settings_local import *
+except ImportException:
+    pass

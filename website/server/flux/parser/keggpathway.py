@@ -470,7 +470,7 @@ class PathwayNetwork(object):
         model.ampl_view(amplfile, mapfile, model_type, additional_file)
 
     def output_sbml(self, f, model_name):
-        from libsbml import libsbml as lb
+        import libsbml as lb
         d=lb.SBMLDocument(3,1)
         m=d.createModel(model_name)
         c=m.createCompartment()
