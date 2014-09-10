@@ -1,36 +1,30 @@
 from django.core.files.storage import FileSystemStorage
+from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from flux.models import Task
 
 ########### Helper functions ########### 
-import sys, smtplib
+import sys
+
 from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
 from django.http import HttpResponse
 
 COMMASPACE = ', '
 def send_mail(address, attachments, title = ""):
-    msg = MIMEMultipart()
-    msg['Subject'] = 'Mail from MicrobesFlux --' + title
-    msg['From'] = 'tanglab@seas.wustl.edu'
-    msg['To'] = address
-    
+    subject = 'Mail from MicrobesFlux --' + title
     fromaddr = "tanglab@seas.wustl.edu"
     toaddrs = [address, ] 
-    content = MIMEText("Dear MicrobesFlux User:  Thank you for using our website. -- MicrobesFlux")
-    msg.attach(content)
+    content = "Dear MicrobesFlux User:  Thank you for using our website. -- MicrobesFlux"
+    email = EmailMessage(subject, content, fromaddr, toaddrs)
+
+    # Attachments.
     fs = FileSystemStorage()
     for fname in attachments:
         fp = fs.open(fname, "rb")
-        content = MIMEText(fp.read())
-        content.add_header('Content-Disposition', 'attachment; filename="'+fname+'"')
+        email.attach(fname, fp.read(), 'text/plain')
         fp.close()
-        msg.attach(content)
-
-    server = smtplib.SMTP('localhost')
-    server.sendmail(fromaddr, toaddrs, msg.as_string())
-    server.quit()
-
+    email.send()
 
 def generate_report(name, suffix):
     fs = FileSystemStorage()
