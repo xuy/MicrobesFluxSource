@@ -480,7 +480,7 @@ class UploadTest(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Outflow', 'products':'C02222', 'reactants':'C02223', 'ko':'false'})
         # print response.content
         
-        f = open("toupload.txt")
+        f = open("test/toupload.txt")
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close() 
         # print response.content
@@ -508,7 +508,7 @@ class TestDFBA(TestCase):
         expected = """{response:{status:0,data:{"pk":"100001","reactionid":"R100001","ko":"false","reactants":"1 ATP","arrow":"0","products":"BIOMASS","pathway":"BIOMASS"}}}"""
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Inflow', 'products':'C01111', 'reactants':'C02222', 'ko':'false'})
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Outflow', 'products':'C02222', 'reactants':'C02223', 'ko':'false'})
-        f = open("toupload.txt")
+        f = open("test/toupload.txt")
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close() 
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
@@ -592,7 +592,7 @@ class TestToyOptimization(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Outflow', 'products':'c_Acetate', 'reactants':'1 c_accoa', 'ko':'false'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         
-        f = open("toy/toy_dfba_upload.txt")
+        f = open("test/toy_dfba_upload.txt")
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close() 
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
