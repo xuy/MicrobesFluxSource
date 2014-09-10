@@ -16,6 +16,7 @@ fi
 echo "2. Rewrite settings_local.py under microbesflux"
 mkdir -p session
 mkdir -p user_file/dfba
+mkdir -p user_file/fba
 
 # Check if settings.py exists. This is to make the operation idempotent.
 if [[ ! -f microbesflux/settings_local.py ]]; then
