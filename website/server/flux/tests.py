@@ -328,28 +328,28 @@ class TaskTest(TestCase):
     
     def test_task_add(self):
         print "\nTest     | TaskView   | /task/add/\t",
-        response = self.client.get('/task/add/', {"type":"fba", "task":"test", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"fba", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
         
-        response = self.client.get('/task/add/', {"type":"dfba", "task":"test", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"dfba", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
         
         response = self.client.get('/task/add/', {"type":"dfba", "task":"test", "email":"xueyang@wustl.edu", "file":"one_more"})
         self.assertEquals(response.status_code, 200)
         
-        response = self.client.get('/task/add/', {"type":"svg", "task":"test", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"svg", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
 
         response = self.client.get('/task/list/')
-        expected = """1,test,fba,youxu@wustl.edu,TODO,NULL\n2,test,dfba,youxu@wustl.edu,TODO,NULL\n3,test,dfba,xueyang@wustl.edu,TODO,one_more\n4,test,svg,youxu@wustl.edu,TODO,NULL"""
+        expected = """1,test,fba,xu.mathena@gmail.com,TODO,NULL\n2,test,dfba,xu.mathena@gmail.com,TODO,NULL\n3,test,dfba,xueyang@wustl.edu,TODO,one_more\n4,test,svg,xu.mathena@gmail.com,TODO,NULL"""
         self.assertEquals(response.content, expected)
     
     def test_task_remove(self):
         print "\nTest     | TaskView   | /task/remove/\t",
-        response = self.client.get('/task/add/', {"type":"t1", "task":"test", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"t1", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
         
-        response = self.client.get('/task/add/', {"type":"t2", "task":"ttest2", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"t2", "task":"ttest2", "email":"xu.mathena@gmail.com", "file":"NULL"})
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)        
         
@@ -360,11 +360,11 @@ class TaskTest(TestCase):
         
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, str(int(tid)+1) +",ttest2,t2,youxu@wustl.edu,TODO,NULL")
+        self.assertEquals(response.content, str(int(tid)+1) +",ttest2,t2,xu.mathena@gmail.com,TODO,NULL")
         
     def test_task_mark(self):
         print "\nTest     | TaskView   | /task/mark/\t",
-        response = self.client.get('/task/add/', {"type":"type1", "task":"test", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"type1", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
         tid = response.content[0]
@@ -374,17 +374,20 @@ class TaskTest(TestCase):
         self.assertEquals(response.content, "Task Marked")
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, tid + ",test,type1,youxu@wustl.edu,Enqueue,NULL")
+        self.assertEquals(response.content, tid + ",test,type1,xu.mathena@gmail.com,Enqueue,NULL")
         
     def test_task_mail(self):
         print "\nTest     | TaskView   | /task/mail/\t",
-        response = self.client.get('/task/add/', {"type":"dfba", "task":"demo.ampl", "email":"youxu@wustl.edu", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"dfba", "task":"demo.ampl", "email":"xu.mathena@gmail.edu", "file":"NULL"})
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
         tid = response.content[0]
         response = self.client.get('/task/mail/', {"tid":tid})
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.content, " Mail sent ")
+        from django.core import mail
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Mail from MicrobesFlux --dFBA')
         
 class ModelViewBoundTest(TestCase):
     

@@ -24,7 +24,7 @@ def send_mail(address, attachments, title = ""):
         fp = fs.open(fname, "rb")
         email.attach(fname, fp.read(), 'text/plain')
         fp.close()
-    email.send()
+    email.send(fail_silently=False)
 
 def generate_report(name, suffix):
     fs = FileSystemStorage()
