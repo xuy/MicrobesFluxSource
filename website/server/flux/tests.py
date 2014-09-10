@@ -536,6 +536,9 @@ from django.contrib.auth.models import User
 class CollectionLogicTest(TestCase):
     def test_collection_save_load(self):
         obj = [1, 2, 3]
+        response = self.client.post('/user/add/', {'username': 't@t.com', 'password': '123'})
+        self.assertEquals(200, response.status_code)
+        self.assertEqual("Successfully added", response.content)
         u = User.objects.get(email = "t@t.com")
         save_collection_to_disk(u, "test", obj)
         o = get_collection_from_disk(u, "test")
