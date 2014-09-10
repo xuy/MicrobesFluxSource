@@ -35,3 +35,11 @@ else
 	sed -i "s%^SESSION_FILE_PATH.*\$%SESSION_FILE_PATH = \'${PWD}/session/\'%g " microbesflux/settings_local.py
 fi
 #SESSION_FILE_PATH
+
+# For tests
+touch user_file/test.ampl
+touch user_file/test.map
+touch user_file/test_header.txt
+touch user_file/test_fba_result.txt
+touch user_file/demo_dfba_result.txt
+
