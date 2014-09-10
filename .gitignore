@@ -12,3 +12,4 @@ demo_dfba_report.txt
 constants_local.py
 settings_local.py
 .DS_store
+db.sqlite3
