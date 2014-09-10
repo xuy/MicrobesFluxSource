@@ -190,7 +190,10 @@ class CollectionViewTest(TestCase):
     
     def test_collection_duplicated_create(self):
         print "\nTest     | CollectionView  | /collection/create/ duplicate names\t",
+        response = self.client.post('/user/add/', {'username': 't@t.com', 'password': '123'})
+        self.assertEquals(response.status_code, 200)
         response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123', 'email':'xu.mathena@gmail.com'})
+        self.assertEquals(response.status_code, 200)
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Collection created") != -1)
@@ -213,7 +216,9 @@ class CollectionViewTest(TestCase):
     
     def test_collection_save(self):
         print "\nTest     | CollectionView  | /collection/save/\t",
+        response = self.client.post('/user/add/', {'username': 't@t.com', 'password': '123'})
         response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
+        self.assertEquals(response.status_code, 200)
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes','email':'xu.mathena@gmail.com'})
         response = self.client.get('/collection/save/', {})
         self.assertEquals(response.status_code, 200)
@@ -221,14 +226,13 @@ class CollectionViewTest(TestCase):
     
     def test_collection_select(self):
         print "\nTest     | CollectionView  | /collection/select/\t",
+        response = self.client.post('/user/add/', {'username': 't@t.com', 'password': '123'})
         response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/collection/save/', {})
         response = self.client.get('/collection/select/', {'collection_name': 'demo'})
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Collection selected ") != -1)
-    
-
 
 class PathwayViewTest(TestCase):
     # fixtures = ['fixture1.json', 'cdata.json']
@@ -299,6 +303,7 @@ class ModelViewObjective(TestCase):
     
     def test_objective_fetch(self):
         print "\nTest     | ModelViewObjective   | /model/objective/fetch/\t",
+
         response = self.client.post('/user/login/', {'username': 't@t.com', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
@@ -507,7 +512,7 @@ class TestDFBA(TestCase):
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close() 
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
-        response = self.client.get('/model/dfba/', {'provided_email':'xu.mathena@gmail.com',})
+        response = self.client.get('/model/dfba/', {'provided_email':'xu.mathena@gmail.com', 'obj_type':'BIOMASS', })
         print response
 
 """
