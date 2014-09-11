@@ -236,8 +236,8 @@ def check_user_upload_file_format(pathway, f):
         return False
     header = f.readline().split()
     length = len(header)
-    print "Header is", header
-    print "Header length is", length, " user defined is ", pathway.user_pathway
+    # print "Header is", header
+    # print "Header length is", length, " user defined is ", pathway.user_pathway
     if length != len(pathway.user_pathway):
         print "Length mismatch 1"
         return False
