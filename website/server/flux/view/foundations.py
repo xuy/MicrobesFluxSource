@@ -31,7 +31,7 @@ def new_get_json(method, input_params, pathway):
         new_key = ''
         # pk = 0
         if pathway_name == "BIOMASS":
-            """ If user gives us biomass, we have to make sure that 
+            """ If user gives us biomass, we have to make sure that
                 the left side of the equation is updated
                 reactants --> BIOMASS
             """
@@ -40,7 +40,7 @@ def new_get_json(method, input_params, pathway):
                 if m.name == "USER:BIOMASS" and len(m.reactions) > 0:
                     new_key = m.reactions.keys()[0]
                     break
-            # 2.1. If there is already a biomass, we have to update its reactant list 
+            # 2.1. If there is already a biomass, we have to update its reactant list
             if len(new_key) > 0:
                 reaction = pathway.reactions[new_key]
                 ret = ""
@@ -50,30 +50,30 @@ def new_get_json(method, input_params, pathway):
                     ret += i
                     ret += " + "
                 pathway.add_pathway(new_key, False, ret + reactants, arrow, "BIOMASS", "BIOMASS")
-            else:       # 2.2. If there is no existing BIOMASS pathway, add a new BIOMASS 
+            else:       # 2.2. If there is no existing BIOMASS pathway, add a new BIOMASS
                 pathway.user_reaction += 1
                 new_key = "Biomass" + str(pathway.user_reaction)
                 pathway.add_pathway(new_key, ko, reactants, arrow, products, pathway_name)
-        
+
         elif pathway_name == "Inflow":
             pathway.user_reaction += 1
             new_key = "Inflow" + str(pathway.user_reaction)
             pathway.register_user_pathway(new_key)
             pathway.add_pathway(new_key, ko, reactants, arrow, products, pathway_name)
-        
+
         elif pathway_name == "Outflow":
             pathway.user_reaction += 1
             new_key = "Outflow" + str(pathway.user_reaction)
             pathway.register_user_pathway(new_key)
             pathway.add_pathway(new_key, ko, reactants, arrow, products, pathway_name)
-        
+
         elif pathway_name == "Heterologous Pathways":
             pathway.user_reaction += 1
             new_key = "Heterologous" + str(pathway.user_reaction)
             pathway.add_pathway(new_key, ko, reactants, arrow, products, pathway_name)
         else:
             pass
-            
+
         j = Json("object")
         tpk = digital_pattern.match(new_key)
         pk = int(tpk.group(1))
@@ -88,13 +88,13 @@ def new_get_json(method, input_params, pathway):
         j.add_pair("products", products)
         j.add_pair("pathway", pathway_name)
         return j
-    
+
     elif method == "pathway_update": # merged
         key = input_params["pk"]
         new_key = input_params["reactionid"]
         ko = input_params['ko']
         reactants = input_params.get("reactants", "")
-        arrow = input_params['arrow']        
+        arrow = input_params['arrow']
         if arrow == "<==>":
             arrow = '1'
         else:
@@ -102,7 +102,7 @@ def new_get_json(method, input_params, pathway):
         products = input_params.get('products')
         pathway_name = input_params.get("pathway", "")
         pathway.update_pathway(new_key, ko, reactants, arrow, products, pathway_name)
-        
+
         j = Json("object")
         j.add_pair("pk", key)
         j.add_pair("reactionid", new_key)
@@ -115,7 +115,7 @@ def new_get_json(method, input_params, pathway):
         j.add_pair("products", products)
         j.add_pair("pathway", pathway_name)
         return j
-        
+
     elif method == "pathway_info": # merged
         t = map(str, pathway.statistics())
         r1 = Json("object")
@@ -144,7 +144,7 @@ def new_get_json(method, input_params, pathway):
         r.add_item(r3)
         r.add_item(r4)
         r.add_item(r5)
-    
+
     elif method == "user_obj_update":   # changed
         key = str(input_params["pk"])
         if len(key) < 5:
@@ -155,7 +155,7 @@ def new_get_json(method, input_params, pathway):
         w = input_params["w"]
         weight = float(w)
         pathway.objective[new_key] = weight
-        
+
         r = Json()
         r.add_pair("pk", key)
         r.add_pair("r", new_key)
@@ -191,7 +191,7 @@ def new_get_json(method, input_params, pathway):
             new_key = 'R' + '0' * (5 - len(key)) + key
         else:
             new_key = 'R' + key
-        
+
         lb = float(input_params["l"][0].encode('ascii', 'ignore'))
         ub = float(input_params["u"][0].encode('ascii', 'ignore'))
         bound[new_key][0] = lb
@@ -207,12 +207,12 @@ def new_get_json(method, input_params, pathway):
 
 """ SmartGWT uses a mechanism called "callback"
     to update data sources. It transfers a callback=xxx
-    parameter to server. Server is responsible 
-    to put the return JSON object as a parameter 
-    to the callback function. 
-    
-    This decorator extracts the callback param 
-    from the GET request, and encapsulate the 
+    parameter to server. Server is responsible
+    to put the return JSON object as a parameter
+    to the callback function.
+
+    This decorator extracts the callback param
+    from the GET request, and encapsulate the
     return value into the callback field.
 """
 def ajax_callback(f):
@@ -224,14 +224,14 @@ def ajax_callback(f):
             payload = result.__repr__()
         return HttpResponse(content = payload, status = 200, content_type = "text/html")
     return newfn
-    
-    
-""" This decorator transforms a list of Json objects 
-    into a table that starts from _startRow and ends 
-    with _endRow. 
-    
+
+
+""" This decorator transforms a list of Json objects
+    into a table that starts from _startRow and ends
+    with _endRow.
+
     SmartGWT defines datasource with lazy fetch. Pushing
-    all data to the client is not necessary. 
+    all data to the client is not necessary.
 """
 def table_response_envelope(f):
     def newfn(arg):
@@ -285,8 +285,8 @@ def table_response_envelope(f):
         return result
     return newfn
 
-""" SmartGWT defines the return format of datasource (the 
-    so-called data envelop). This decorator encapsulates 
+""" SmartGWT defines the return format of datasource (the
+    so-called data envelop). This decorator encapsulates
     the data into such an envelop."""
 def response_envelope(f):
     def newfn(arg):
@@ -309,8 +309,6 @@ def response_envelope(f):
     return newfn
 
 def generate_pathway(bac_name, collection_name = ""):
-    # kegg_database = "/Users/youxu/ProgramInput/kegg_database/"
-    filelist = os.listdir(kegg_database + bac_name + "/")
-    pathway = PathwayNetwork(kegg_database, bac_name, filelist, collection_name)
+    pathway = PathwayNetwork(kegg_database, bac_name, collection_name)
     pathway.read_metabolisms()
     return pathway

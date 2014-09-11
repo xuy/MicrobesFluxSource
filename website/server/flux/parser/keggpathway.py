@@ -1,13 +1,10 @@
 #!/usr/bin/env python
+from collections import defaultdict
+import os
 from pprint import pprint
-try:
-    from collections import defaultdict
-except:
-    from defaultdict import defaultdict
 
 # from reference import ReactionDB
 from compounddb import CompoundDB
-
 from enzyme import Enzyme
 from reaction import Reaction
 from metabolism import Metabolism
@@ -22,15 +19,15 @@ class OptimizationModel:
         self.bounds = None
         self.objective = None
         self.compounddb = CompoundDB()
-    
+
     def json_view(self):
         pass
-   
+
     def normalize_for_ampl(self, s):
         """ AMPL has a strict syntax for identifiers"""
         result = []
         illegal_symbols = ['+','-','=','/','(',')',',','[',']']
-	for i in s:
+        for i in s:
             if i.isalnum():
                 result.append(i)
             else:
@@ -39,7 +36,7 @@ class OptimizationModel:
         if r[0] in '0123456789':
           r = "C_" + r
         return r
- 
+
     def ampl_view(self, f, mapfile, model_type="fba", additional_file = None):
         """ Output an AMPL file """
         for var in self.variable:
@@ -48,7 +45,7 @@ class OptimizationModel:
             mapfile.write(" ")
             mapfile.write(var)
             mapfile.write("\n")
-            
+
         f.write("# variables\n")
         defined = {}
         for var in self.variable:
@@ -61,7 +58,7 @@ class OptimizationModel:
                 f.write("var " + name + ">=" + str(b[0]) + ", <=" + str(b[1]) + ";\n")
             else:
                 f.write("var " + name + ";\n")
-        
+
         f.write("# Objective function \n")
         f.write("maximize Obj: \n")
         f.write("0 ")
@@ -71,7 +68,7 @@ class OptimizationModel:
                 weight = self.objective[item]
                 f.write(" + " + str(weight) + " * " + var)
         f.write(";\n")
-        
+
         # Replace RXXXX to VXXXX in the SV=0 representation
         f.write("# Constraints\n")
         constraint_names = {}
@@ -94,12 +91,12 @@ class OptimizationModel:
                 tempc = self.normalize_for_ampl(self.compounddb.get_long_name(str(compound)))
                 while constraint_names.has_key(tempc):
                     tempc = tempc + "_x"
-                constraint_names[tempc] = True 
+                constraint_names[tempc] = True
                 f.write("subject to " + tempc + ":\n")
                 f.write("\t")
                 f.write(' '.join(target))
                 f.write(" = 0 ;\n")
-        
+
         f.write("option solver ipopt;\n")
         if model_type == "fba":
             f.write("solve > /dev/null ;\n")
@@ -121,7 +118,7 @@ class OptimizationModel:
                 if not len(values):
                     continue
                 f.write('printf "===== Data Point ' + str(count) + ' ====\\n";\n')
-                count +=1 
+                count +=1
                 for v in values:
                     v.strip()
                 f.write("""# DFBA part \n""")
@@ -132,60 +129,80 @@ class OptimizationModel:
                 f.write("""for {k in 1.._nvars} {printf "%s\\t%6.6f\\n", _varname[k], _var[k];}\n""")
                 for v in header:
                     f.write("unfix " + self.variable[v] + ";\n")
-                
+
             f.write("# All dfba sections done\n")
-""" 
+"""
     One PathwayNetwork for each bacteria
 """
 
-### The centeral class for this project ### 
+### The centeral class for this project ###
 
 class PathwayNetwork(object):
-    def __init__(self, database, bacteria_name, filelist, collection_name = ""):
+    def __init__(self, database, bacteria_name, collection_name = ""):
         self.database = database
-        self.collection_name = collection_name        
         self.name = bacteria_name
-        self.filelist = [i for i in filelist if i.endswith("xml")]
-        self.reactions = {}
-        
+        self.collection_name = collection_name
+        self._use_tar_file = False
+
+        self.resource = database + bacteria_name
+        if os.path.isdir(self.resource):
+            self.filelist = [i for i in os.listdir(self.resource) if i.endswith("xml")]
+        elif os.path.exists(self.resource + '.tar.gz'):
+            self._use_tar_file = True
+        self.__init_data_members()
+
+    def __init_data_members(self):
         self.compounddb = CompoundDB()
+        self.reactions = {}
         self.user_reaction_index = 0
         self.objective = {}
         self.sv = defaultdict(list)
         self.bound = defaultdict(list)
         self.model = None
-        self.possible_names = {}    # Remember all short name 
+        self.possible_names = {}    # Remember all short name
         self.user_pathway = {}  # For name checking
-        
+
         self.active_gene = 0
         self.total_gene = 0
         self.active_orthlog = 0
         self.total_orthlog = 0
-        
+
     ####################################################
     #############  metabolism ##########################
     ####################################################
 
     def read_metabolisms(self):
-        for i in self.filelist:
-            if i.find("01100")!=-1: # Skip this metabolism
-                continue
-            file_path = self.database + self.name + "/" + i
-            self.add_metabolism_in_batch(Metabolism(file_path))
+        if self._use_tar_file:
+            import tarfile
+            tar = tarfile.open(self.resource + '.tar.gz', 'r:gz')
+            for tarinfo in tar.getmembers():
+                if not tarinfo.isfile():
+                    continue
+                name = tarinfo.name
+                if name.endswith('xml') and name.startswith(self.name + '/' + self.name + '00'):
+                    self.add_metabolism_in_batch(Metabolism(
+                        content = ''.join(tar.extractfile(tarinfo).readlines())))
+
+        else:
+            for i in self.filelist:
+                if not i.startswith(self.name + "00"): # Skip biosynthesis metabolisms
+                    continue
+                file_path = self.database + self.name + "/" + i
+                self.add_metabolism_in_batch(Metabolism(file = file_path))
 
     def add_metabolism_in_batch(self, m):
         self.active_gene        += m.active_gene
         self.total_gene         += m.total_gene
         self.active_orthlog     += m.active_orthlog
         self.total_orthlog  += m.total_orthlog
-                
+
         for name, r in m.reactions.iteritems():
             if r.substrates and r.products:
                 if self.reactions.has_key(name):
                     # Merge two actions from two pathways, don't change anything
                     mat = self.reactions[name].metabolism + "/" + m.name
                     self.reactions[name].set_metabolism_name(mat)
-                else:    # Construct a new reaction 
+                else:    # Construct a new reaction
                     self.reactions[name] = r
                     for short_name in r.longname_map:
                         self.possible_names[short_name] = True
@@ -195,8 +212,8 @@ class PathwayNetwork(object):
                     if m.reaction_name_to_active_map:
                         is_active = m.reaction_name_to_active_map[name]
                     r.active = is_active
-    
-    
+
+
     ####################################################
     #############  pathway info ########################
     ####################################################
@@ -204,7 +221,7 @@ class PathwayNetwork(object):
         active_reactions = 0
         for name, r in self.reactions.iteritems():
             if r.active:
-                active_reactions+=1        
+                active_reactions+=1
         return (self.total_gene   + self.total_orthlog, \
                 self.active_gene  + self.active_orthlog, \
                 len(self.reactions),  active_reactions)
@@ -214,17 +231,17 @@ class PathwayNetwork(object):
     ####################################################
     def check_valid_names(self, name):
         return self.compounddb.is_a_valid_name(name)
-    
+
     ####################################################
     #############  pathway fetch/update ################
     ####################################################
     def register_user_pathway(self, user_pathway_name):
         self.user_pathway[user_pathway_name] = True
-        
+
     def check_user_pathway(self, user_pathway_name):
         return self.user_pathway.has_key(user_pathway_name)
-    
-    ### similar to the process method in alias. 
+
+    ### similar to the process method in alias.
     def __get_coef_and_name(self, part_of_equation):
         coef     = []
         compound = []
@@ -238,23 +255,23 @@ class PathwayNetwork(object):
                 coef.append(float(k[0]))
                 compound.append(k[1].strip())
         return (coef, compound)
-    
+
     def __construct_reaction(self, rname, ko, reac, arrow, prod, mname):
         """ Code to parse and construct a reaction"""
         # Step 1. split reactants.
         rname = str(rname)
         mname = str(mname)
-         
+
         r = Reaction(rname)
         left_coef,  left_comp = self.__get_coef_and_name(reac)
         right_coef, right_comp = self.__get_coef_and_name(prod)
-        
+
         r.substrates.extend(left_comp)
         r.products.extend(right_comp)
-        
+
         for i in xrange(len(left_coef)):
             r.stoichiometry[left_comp[i]] = left_coef[i]
-        
+
         for i in xrange(len(right_coef)):
             r.stoichiometry[right_comp[i]] = right_coef[i]
         r.reversible = arrow
@@ -276,7 +293,7 @@ class PathwayNetwork(object):
         self.objective = {}
         self.sv = defaultdict(list)
         self.bound = defaultdict(list)
-        
+
     def add_pathway(self, reaction_name, ko, reactants, arrow, products, metabolism_name):
         if self.reactions.has_key(reaction_name):
             m = str(metabolism_name)
@@ -290,7 +307,7 @@ class PathwayNetwork(object):
         r = self.__construct_reaction(reaction_name, ko, reactants, arrow, products, metabolism_name)
         self.reactions[reaction_name] = r
         self.__invalidate_cached_bounds()
-        
+
     ####################################################
     #############  Objective Function   ################
     ####################################################
@@ -308,7 +325,7 @@ class PathwayNetwork(object):
 
     def get_objective_weights(self):
         return self._get_objective()
-        
+
     ####################################################
     #############  SV =0 constraints    ################
     ####################################################
@@ -327,7 +344,7 @@ class PathwayNetwork(object):
 
     def get_long_name(self, a_short_name):
         return self.compounddb.get_long_name(a_short_name)
-        
+
     ####################################################
     #############  Variable bounds      ################
     ####################################################
@@ -362,20 +379,20 @@ class PathwayNetwork(object):
                 self.variable_database[name] = "V" + str(start)
                 start +=1
         self.model.variable = self.variable_database
-        
+
     def generate_objectives(self, objective_type):
         if objective_type == "user":
             self._get_objective()
             self.model.objective = self.objective
         else:
-            # initialize things 
+            # initialize things
             self._get_objective()
             self.model.objective = self.objective
             for key in self.model.objective:
                 self.model.objective[key] = 0.0
             reaction = self.reactions["BIOMASS0"]
             self.model.objective["BIOMASS0"] = 1.0
-        
+
     def generate_bounds(self):
         self.get_bounds()
         self.model.bounds = self.bound
@@ -387,7 +404,7 @@ class PathwayNetwork(object):
         self.generate_objectives(objective_type)
         self.generate_constraints()
         return self.model
-        
+
     def output_model_report(self, report_file):
         a, b, c, d = self.statistics()
         import datetime
@@ -395,21 +412,21 @@ class PathwayNetwork(object):
         report_file.write("======================================\n")
         report_file.write("========  Part I: Genome Info ========\n")
         report_file.write("======================================\n")
-        
-        
+
+
         report_file.write("Name of the pathway: ")
         report_file.write(self.collection_name)
         report_file.write("\n")
-        
+
         report_file.write("Name of the organism: ")
         report_file.write(self.name)
         report_file.write("\n")
-        
+
         report_file.write("Number of all genes/orthologs: ")
         report_file.write(str(a))
         report_file.write("\n")
-        
-        
+
+
         report_file.write("Number of all genes/orthologs: ")
         report_file.write(str(a))
         report_file.write("\n")
@@ -429,7 +446,7 @@ class PathwayNetwork(object):
         report_file.write("======================================\n")
         report_file.write("========   Part II: Pathways =========\n")
         report_file.write("======================================\n")
-        
+
         for n in self.reactions:
             r = self.reactions[n]
             if len(r.products) > 0 and len(r.substrates) > 0:
@@ -439,8 +456,8 @@ class PathwayNetwork(object):
         report_file.write("======================================\n")
         report_file.write("========   Part III: AMPL File  ======\n")
         report_file.write("======================================\n")
-        
-        
+
+
     def output_ampl(self, amplfile, mapfile, reportfile, model_type="fba", additional_file = None, objective_type = "user"):
         model = self.generate_optimization_model(objective_type)
         self.output_model_report(reportfile)
@@ -462,22 +479,22 @@ class PathwayNetwork(object):
             tempr.setId(n)
             tempr.setReversible(r.reversible)
             tempr.setCompartment("cell")
-            
+
             if r.ko:    # knockout
                 tempr.setAnnotation("<microbesflux:KO xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">" + str(r.ko) +"</microbesflux:KO>")
-                
+
             if r.metabolism.find("Inflow") != -1:
                 tempr.setAnnotation("<microbesflux:user-reaction xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">Inflow</microbesflux:user-reaction>")
-            
+
             if r.metabolism.find("Outflow") != -1:
                 tempr.setAnnotation("<microbesflux:user-reaction xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">Outflow</microbesflux:user-reaction>")
-            
+
             if r.metabolism.find("Heterologous") != -1:
                 tempr.setAnnotation("<microbesflux:user-reaction xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">Heterologous</microbesflux:user-reaction>")
-            
+
             if r.metabolism.find("BIOMASS") != -1:
                 tempr.setAnnotation("<microbesflux:user-reaction xmlns:microbesflux=\"http://tanglab.engineering.wustl.edu/dtd.xml\">BIOMASS</microbesflux:user-reaction>")
-            
+
             for reactant, reactant_long in zip(r.substrates, r.get_substrates_as_long_names()):
                 species.add(reactant_long)
                 temp_reac = tempr.createReactant()
@@ -489,11 +506,11 @@ class PathwayNetwork(object):
                 temp_prod.setSpecies(product_long)
                 temp_prod.setStoichiometry(r.stoichiometry[product])
             tempr.setName(n)
-        
+
         for spe in species:
             s = m.createSpecies()
             ids = str(spe)
-            
+
             ids = ids.replace("_", "")
             ids = ids.replace(" ", "")
             ids = ids.replace("-", "")
@@ -501,14 +518,14 @@ class PathwayNetwork(object):
             ids = ids.replace(")", "")
             ids = ids.replace("]", "")
             ids = ids.replace("[", "")
-            
+
             s.setId(ids)
             s.setName(spe)
             s.setCompartment("cell")
-        
+
         f.write("<?xml version='1.0' encoding='UTF-8'?>\n")
         f.write(d.toSBML())
-    
+
     def external_compond_to_flux(self, name, signature):
         for rname, r in self.reactions.iteritems():
             if ' '.join(r.substrates).find(name + '.ext') != -1:
