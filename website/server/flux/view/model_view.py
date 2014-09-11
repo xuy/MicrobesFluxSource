@@ -1,13 +1,14 @@
+import os
+from time import gmtime, strftime
+
+from flux.models import Profile
+from flux.models import Task
+from flux.storage import usl # Unified Storage Library
+from flux.task.task import send_mail
 from flux.view.foundations import ajax_callback
 from flux.view.foundations import table_response_envelope
 from flux.view.foundations import response_envelope
 from flux.view.json import Json
-
-from time import gmtime, strftime
-from flux.models import Profile
-
-from flux.storage import usl # Unified Storage Library
-import os
 
 ####################################################
 #############  Objective Function   ################
@@ -169,12 +170,12 @@ from django.http import HttpResponse
 def svg(request):
     n = request.session["collection_name"]
     pathway = request.session["collection"]
-    address = request.session['provided_email'] 
+    email = request.session['provided_email'] 
     write_pathway_for_plot(pathway, n)
-    p = subprocess.Popen("/research-www/engineering/tanglab/flux/submit_job_to_cloud.sh " + n + " svg " + address , shell=True) 
+    # Add a task to task queue.
+    t = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
+    t.save()
     return HttpResponse(content = "SVG Task submitted", status = 200, content_type = "text/html")
-
-from flux.task.task import send_mail
 
 def sbml(request):
     n = request.session["collection_name"]
@@ -188,12 +189,12 @@ def sbml(request):
     send_mail(address, attachments, title="SBML") 
     return HttpResponse(content = "SBML file send.", status = 200, content_type = "text/html")
 
-### TODO: change the n here to usl system
+# TODO: change the n here to usl system
 def optimization(request):
     
     n = request.session["collection_name"]
     pathway = request.session["collection"]
-    address = request.session['provided_email'] 
+    email = request.session['provided_email'] 
     
     obj_type = request.GET['obj_type']
     ot = 'biomass'
@@ -203,13 +204,13 @@ def optimization(request):
     f = fs.open(n + ".ampl", "w")
     mapf = fs.open( n + ".map", "w")
     reportfile = fs.open(n + "_header.txt", "w")
-    
     pathway.output_ampl(f, mapf, reportfile, objective_type = ot )
     f.close()
     mapf.close()
     reportfile.close()
-    p = subprocess.Popen("/research-www/engineering/tanglab/flux/submit_job_to_cloud.sh " + n + " fba " + address , shell=True) 
-    sts = os.waitpid(p.pid, 0)[1]
+    
+    t = Task(task_type = 'fba', main_file = n, email = email, additional_file = '', status = "TODO")
+    t.save()
     
     # Locate user data (if any) and update their profiles
     u = request.user
@@ -314,7 +315,7 @@ def dfba_solve(request):
     pathway = request.session["collection"]
     name = request.session["collection_name"]
     associated_file_key = request.session["dfba_upload"]
-    address = request.session['provided_email'] 
+    email = request.session['provided_email'] 
 
     fs = FileSystemStorage()
     f = fs.open(name + ".ampl", "w")
@@ -333,12 +334,11 @@ def dfba_solve(request):
     f.close()
     mapf.close()
     reportfile.close()
- 
-    print "/research-www/engineering/tanglab/flux/submit_job_to_cloud.sh " + name + " " + associated_file_key + " dfba " + address
-    p = subprocess.Popen("/research-www/engineering/tanglab/flux/submit_job_to_cloud.sh " + name + " " + associated_file_key + " dfba " + address , shell=True) 
-    sts = os.waitpid(p.pid, 0)[1]
+    t = Task(task_type = 'dfba', main_file = name, email = email, additional_file = associated_file_key, status = "TODO")
+    t.save()
     return HttpResponse(content = "New DFBA optimization problem submitted .. ", status = 200, content_type = "text/html")
 
+# TODO(xuy): change this to a different file transport mechanism
 def test_ssh(request):
     p = subprocess.Popen("/research-www/engineering/tanglab/flux/test_scp_to_cloud.sh ", shell=True) 
     sts = os.waitpid(p.pid, 0)[1]

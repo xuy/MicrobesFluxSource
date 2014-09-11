@@ -98,7 +98,7 @@ def index_page(request):
     """, status = 200, content_type = "text/html")
 
 
-#### TODO: revise this to the new Ajax API standard
+# TODO: remove this method, since get_callback is gone.
 @login_required
 def user_summary(request):
     u = request.user
