@@ -1,6 +1,8 @@
 """ A metabolism is one kegg file that contains compounds and enzymes.
 Each enzyme controls reaction(s)"""
 # from enzyme import Enzyme
+import os.path
+
 from reaction import Reaction
 from reference import ReactionDB
 from helper import *
@@ -13,34 +15,39 @@ import logging
 logger = logging.getLogger('default')
 
 class Metabolism:
-    def __init__(self, f = None):
+    def __init__(self, file = None, content = None):
         self.title = ''
         self.name = ''
         self.compounds_id = {}  # String -> int (inner id)
-        self.file = f
-        
+        self.file = file
+        self.content = content
+        if self.file == None and self.content == None:
+            logger.fatal("Must specify file or content for Metabolism")
+            return
+
         self.active_gene = 0
         self.total_gene = 0
         self.active_orthlog = 0
         self.total_orthlog = 0
-        
+
         self.reactiondb = ReactionDB()
         self.reactions = {}
-        
+
         self.reaction_name_to_active_map = {}
-        if f:
-            self.__readfile(f)
-    
-    
+        if self.file:
+            self.__read_file(self.file)
+        elif self.content:
+            self.__read_content(self.content)
+
     def __repr__(self):
         return self.title + "\t" + self.name
-    
+
     def __mark_reaction_active(self, reaction_list, is_active):
         for r in reaction_list:
             self.reaction_name_to_active_map[r] = \
                 self.reaction_name_to_active_map.get(r, False) \
                 or is_active
-    
+
     def __parse_compound(self, entry):
         """ Parse the compound name to an internal id
             This information might be useless, however
@@ -49,7 +56,7 @@ class Metabolism:
         compound_id = entry.get('id')
         self.compounds_id[compound_name] = compound_id
         pass
-    
+
     def __parse_gene(self, entry):
         """ Parse the gene information
                 each entry might have multiple genes
@@ -67,7 +74,7 @@ class Metabolism:
                 self.active_gene+=1
             self.total_gene +=1
             self.__mark_reaction_active(regulated_reactions, active)
-    
+
     def __parse_ortholog(self, entry):
         """
             Parse the ortholog information
@@ -85,7 +92,7 @@ class Metabolism:
             if active:
                 self.active_orthlog += 1
             self.total_orthlog +=1
-    
+
     def __construct_reaction_from_kgml(self, reaction, rid, reversible):
         substrates = []
         products = []
@@ -107,13 +114,13 @@ class Metabolism:
         r.stoichiometry = stoichiometry
         r.reversible = reversible
         return r
-    
+
     def __construct_reaction_from_reactionlst(self, reaction, rid, reversible):
         substrates = []
         products = []
         stoichiometry = {}
         longname_map  = {}
-        
+
         r = Reaction(rid)
         substrates = self.reactiondb.get_stoichiometry(rid, "_substrates_")
         products   = self.reactiondb.get_stoichiometry(rid, "_products_")
@@ -122,18 +129,18 @@ class Metabolism:
         for sub in substrates:
             stoichiometry[ sub ] = self.reactiondb.get_stoichiometry(rid, sub)
             longname_map[ sub ] = self.reactiondb.get_long_name(sub)
-            
+
         for prod in products:
             stoichiometry[ prod ] = self.reactiondb.get_stoichiometry(rid, prod)
             longname_map[ prod ] = self.reactiondb.get_long_name( prod )
-            
+
         r.substrates = substrates
         r.products = products
         r.stoichiometry = stoichiometry
         r.reversible = reversible
         r.longname_map = longname_map
         return r
-    
+
     def __parse_reactions(self, tree):
         """
             Generate a reaction dictionary called reactions
@@ -147,19 +154,19 @@ class Metabolism:
 
             if reaction.get('type') == 'reversible':
                 reversible = True
-            
+
             r =  self.__construct_reaction_from_reactionlst(reaction, rid, reversible)
             if not r:
                 return
             if r.products and r.substrates:
                 self.reactions[rid] = r
-    
+
     def __parse_map(self, entry):
         pass
-    
+
     def __parse_group(self, entry):
         pass
-    
+
     def __parse_entries(self, tree):
         for entry in tree.getiterator('entry'):
             t = entry.get('type')
@@ -177,16 +184,24 @@ class Metabolism:
                 self.__parse_group(entry)
             else:
                 logger.warning("Unknown entry type '" + t + "' in KGML. It will be ignored.")
-    
-    def __readfile(self, xmlfile):
+
+    def __read_content(self, xmlcontent):
+        root = ET.fromstring(xmlcontent)
+        tree = ET.ElementTree(root)
+        self.__parse_xml_tree(tree, root)
+
+    def __read_file(self, xmlfile):
         tree = ET.parse(xmlfile)
-        self.title = tree.getroot().get('title')  # human readable name
-        # self.name = tree.getroot().get('name')    # like path:12301
-        self.name = tree.getroot().get('name')    # like path:12301
+        root = tree.getroot()
+        self.__parse_xml_tree(tree, root)
+
+    def __parse_xml_tree(self, tree, root):
+        self.title = root.get('title')  # human readable name
+        self.name = root.get('name')    # like path:12301
         self.__parse_entries(tree)
         self.__parse_reactions(tree)
-    
-    
+
+
     def register_variable(self, variable_database, compound_database, is_need_inactive):
         for gene in self.gene_enzyme:
              gene.yield_variable(variable_database, compound_database, is_need_inactive)
