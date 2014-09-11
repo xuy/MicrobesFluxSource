@@ -18,6 +18,8 @@ def _get_compound_list(compond_string):
     return comp_list
 
 def _check_user_compounds_validity(pathway, compond_string):
+    print pathway
+    print compond_string
     if pathway.name == "TOY":
         return True
     coef, comp_list = parse_reaction_part(compond_string)

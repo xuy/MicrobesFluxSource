@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "http://www.genome.jp/kegg/xml/KGML_v0.7.1_.dtd">
+<!-- Creation date: Mar 5, 2010 14:12:22 +0900 (GMT+09:00) -->
+<pathway name="path:tex00641" org="tex" number="00641"
+         title="3-Chloroacrylic acid degradation"
+         image="http://www.genome.jp/kegg/pathway/tex/tex00641.png"
+         link="http://www.genome.jp/kegg-bin/show_pathway?tex00641">
+    <entry id="1" name="cpd:C16348" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C16348">
+        <graphics name="C16348" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="312" y="263" width="8" height="8"/>
+    </entry>
+    <entry id="2" name="tex:Teth514_0627" type="gene" reaction="rn:R05234"
+        link="http://www.kegg.jp/dbget-bin/www_bget?tex:Teth514_0627">
+        <graphics name="Teth514_0627" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="313" y="223" width="46" height="17"/>
+    </entry>
+    <entry id="3" name="tex:Teth514_0627" type="gene" reaction="rn:R05233"
+        link="http://www.kegg.jp/dbget-bin/www_bget?tex:Teth514_0627">
+        <graphics name="Teth514_0627" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="178" y="223" width="46" height="17"/>
+    </entry>
+    <entry id="4" name="path:tex00620" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?tex00620">
+        <graphics name="Pyruvate metabolism" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="245" y="531" width="118" height="25"/>
+    </entry>
+    <entry id="6" name="ko:K01618" type="ortholog" reaction="rn:R06973"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K01618">
+        <graphics name="K01618" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="246" y="421" width="46" height="17"/>
+    </entry>
+    <entry id="7" name="path:tex00641" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?tex00641">
+        <graphics name="TITLE:3-Chloroacrylic acid degradation" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="187" y="57" width="294" height="24"/>
+    </entry>
+    <entry id="8" name="ko:K00128" type="ortholog" reaction="rn:R05238"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K00128">
+        <graphics name="K00128" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="313" y="294" width="46" height="17"/>
+    </entry>
+    <entry id="9" name="ko:K01563" type="ortholog" reaction="rn:R05368"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K01563">
+        <graphics name="K01563" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="313" y="162" width="46" height="17"/>
+    </entry>
+    <entry id="10" name="ko:K00128" type="ortholog" reaction="rn:R05237"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K00128">
+        <graphics name="K00128" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="178" y="294" width="46" height="17"/>
+    </entry>
+    <entry id="12" name="ko:K01563" type="ortholog" reaction="rn:R05367"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K01563">
+        <graphics name="K01563" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="178" y="162" width="46" height="17"/>
+    </entry>
+    <entry id="13" name="cpd:C06613" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06613">
+        <graphics name="C06613" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="178" y="263" width="8" height="8"/>
+    </entry>
+    <entry id="14" name="cpd:C06610" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06610">
+        <graphics name="C06610" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="312" y="139" width="8" height="8"/>
+    </entry>
+    <entry id="15" name="cpd:C06611" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06611">
+        <graphics name="C06611" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="178" y="195" width="8" height="8"/>
+    </entry>
+    <entry id="16" name="cpd:C06614" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06614">
+        <graphics name="C06614" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="178" y="331" width="8" height="8"/>
+    </entry>
+    <entry id="17" name="cpd:C00084" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00084">
+        <graphics name="C00084" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="245" y="459" width="8" height="8"/>
+    </entry>
+    <entry id="18" name="cpd:C00222" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00222">
+        <graphics name="C00222" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="245" y="387" width="8" height="8"/>
+    </entry>
+    <entry id="19" name="cpd:C06612" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06612">
+        <graphics name="C06612" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="312" y="195" width="8" height="8"/>
+    </entry>
+    <entry id="20" name="cpd:C06609" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06609">
+        <graphics name="C06609" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="178" y="139" width="8" height="8"/>
+    </entry>
+    <entry id="21" name="cpd:C06615" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06615">
+        <graphics name="C06615" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="312" y="331" width="8" height="8"/>
+    </entry>
+    <reaction id="2" name="rn:R05234" type="irreversible">
+        <substrate id="19" name="cpd:C06612"/>
+        <product id="1" name="cpd:C16348"/>
+    </reaction>
+    <reaction id="3" name="rn:R05233" type="irreversible">
+        <substrate id="15" name="cpd:C06611"/>
+        <product id="13" name="cpd:C06613"/>
+    </reaction>
+</pathway>

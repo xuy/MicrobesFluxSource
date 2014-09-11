@@ -7,6 +7,7 @@ from view.pathway_view import pathway_add
 from view.pathway_view import pathway_update
 from view.pathway_view import pathway_info
 from view.pathway_view import pathway_fetch
+from view.pathway_view import pathway_reaction_query
 
 # Optimization model
 from view.model_view import user_obj_fetch
@@ -91,5 +92,6 @@ urlpatterns = patterns('',
     (r'^task/remove/', task_remove),
     (r'^task/mark/', task_mark),
     (r'^task/mail/', task_mail),
+    (r'^pathway/query/', pathway_reaction_query),
     # (r'^test/testmail/', test_mail),
 )
