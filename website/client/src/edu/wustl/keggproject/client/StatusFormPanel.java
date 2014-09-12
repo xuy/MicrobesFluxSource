@@ -98,26 +98,7 @@ public class StatusFormPanel {
         loadButton.setVisible(false);
 
         class MyCallback implements RequestCallback {
-
-FormPanel.SubmitCompleteHandler() {
             @Override
-            public void onSubmitComplete(SubmitCompleteEvent event) {
-                if (event.getResults().contains("selected")) {
-                    setStatus("Model "
-                            + collectionListBox.getValue(collectionListBox
-                            .getSelectedIndex()) + " loaded. ");
-                    conf.setCurrentCollection(collectionListBox
-                            .getValue(collectionListBox.getSelectedIndex()));
-
-                } else {
-                    setStatus("Model "
-                            + collectionListBox.getValue(collectionListBox
-                            .getSelectedIndex()) + " is not loaded. ");
-
-                }
-                clearForm();
-            }
-        }            @Override
             public void onResponseReceived(Request request, Response response) {
                 collectionListBox.clear();
                 collectionListBox.setVisible(true);
@@ -128,12 +109,7 @@ FormPanel.SubmitCompleteHandler() {
                 setStatus("Load model: ");
             }
 
-FormPanel.SubmitHandler() {
             @Override
-            public void onSubmit(SubmitEvent event) {
-                ;
-            }
-        }            @Override
             public void onError(Request request, Throwable exception) {
                 // TODO Auto-generated method stub
             }
@@ -153,7 +129,28 @@ FormPanel.SubmitHandler() {
         f.setAction(conf.getBaseUrl() + "collection/select/");
         f.setMethod(FormPanel.METHOD_GET);
 
-        f.addSubmitCompleteHandler(new ClickHandler() {
+        f.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+
+            @Override
+            public void onSubmitComplete(SubmitCompleteEvent event) {
+                if (event.getResults().contains("selected")) {
+                    setStatus("Model "
+                            + collectionListBox.getValue(collectionListBox
+                            .getSelectedIndex()) + " loaded. ");
+                    conf.setCurrentCollection(collectionListBox
+                            .getValue(collectionListBox.getSelectedIndex()));
+
+                } else {
+                    setStatus("Model "
+                            + collectionListBox.getValue(collectionListBox
+                            .getSelectedIndex()) + " is not loaded. ");
+
+                }
+                clearForm();
+            }
+        });
+
+        loadButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 setStatus("Loading  "
@@ -164,11 +161,6 @@ FormPanel.SubmitHandler() {
                 f.submit();
             }
         });
-
-        f.addSubmitHandler(new );
-
-        loadButton.addClickHandler(new );
-
     }
 
     public void saveFile(boolean s) {
@@ -252,7 +244,6 @@ FormPanel.SubmitHandler() {
             public void onSubmit(SubmitEvent event) {
                 // saveaspanel.setVisible(false);
             }
-
         });
         f.setWidget(saveaspanel);
     }

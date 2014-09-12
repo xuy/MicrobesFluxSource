@@ -970,23 +970,23 @@ public class RightPanel {
         final Tab futureTab = new Tab("Future Work");
 
         HTMLPane introHTML = new HTMLPane();
-        introHTML.setContentsURL("intro.html");
+        introHTML.setContentsURL("media/intro.html");
         introHTML.setScrollbarSize(0);
 
         HTMLPane archHTML = new HTMLPane();
-        archHTML.setContentsURL("arch.html");
+        archHTML.setContentsURL("media/arch.html");
         archHTML.setScrollbarSize(0);
 
         HTMLPane demoHTML = new HTMLPane();
-        demoHTML.setContentsURL("demo.html");
+        demoHTML.setContentsURL("media/demo.html");
         demoHTML.setScrollbarSize(0);
 
         HTMLPane faqHTML = new HTMLPane();
-        faqHTML.setContentsURL("faq.html");
+        faqHTML.setContentsURL("media/faq.html");
         faqHTML.setScrollbarSize(0);
 
         HTMLPane futureHTML = new HTMLPane();
-        futureHTML.setContentsURL("future.html");
+        futureHTML.setContentsURL("media/future.html");
         futureHTML.setScrollbarSize(0);
 
         introductionTab.setPane(introHTML);
@@ -994,7 +994,6 @@ public class RightPanel {
         demoTab.setPane(demoHTML);
         faqTab.setPane(faqHTML);
         futureTab.setPane(futureHTML);
-
 
         topTabSet.addTab(introductionTab);
         topTabSet.addTab(flowchartTab);
