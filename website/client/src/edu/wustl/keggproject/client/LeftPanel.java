@@ -29,304 +29,293 @@ package edu.wustl.keggproject.client;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.PasswordTextBox;
-import com.google.gwt.user.client.ui.StackPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
 import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
-
 import edu.wustl.keggproject.client.datasource.AccountSummaryDS;
 
 public class LeftPanel {
-	private RightPanel rp;
-	private StatusFormPanel sf;
+    private RightPanel rp;
+    private StatusFormPanel sf;
 
-	private AccountDialogBox dialogBox;
-	
-	public void setRightPanel(RightPanel r) {
-		rp = r;
-	}
+    private AccountDialogBox dialogBox;
 
-	public void setStatusFormPanel(StatusFormPanel sfp) {
-		sf = sfp;
-	}
-	
-	public Widget getLeftPanel() {
+    public void setRightPanel(RightPanel r) {
+        rp = r;
+    }
 
-		dialogBox = new AccountDialogBox();	
-		dialogBox.setGlassEnabled(true);
-		
-		final VerticalPanel filePanel = new VerticalPanel();
-		final Anchor newFile = new Anchor("New model");
-		final Anchor loadFile = new Anchor("Load model");
-		final Anchor saveFile = new Anchor("Save model");
-		final Anchor saveFileAs = new Anchor("Save model As");
-		final Configuration conf = ConfigurationFactory.getConfiguration();
+    public void setStatusFormPanel(StatusFormPanel sfp) {
+        sf = sfp;
+    }
 
-		newFile.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					// Window.
-					Window.alert("You have to log in to create a new model. You can create an account for free by clicking Register.");
-					return;
-				}
-				if (conf.getCurrentCollection().length() > 0) {
-					boolean proceed = Window
-						.confirm("You are about to create a new model. Make sure to save all changes (if any) to your current model. Do you want to proceed? ");
-					if (!proceed) {
-							return;
-					}
-				}
-				rp.changeToCreateANewCollection();
-			}
-		});
+    public Widget getLeftPanel() {
 
-		loadFile.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (conf.getLogin() == false) {
-					Window.alert("You have to login first to load existing models");
-					return;
-				}
-				
-				if (conf.getCurrentCollection().length() > 0) {
-					boolean proceed = Window
-							.confirm("You are about to load a new model. Changes to the current model will be discarded unless you click \"Save Model\" first. Do you want to proceed? ");
-					if (!proceed) {
-						return;
-					}
-				}
-				
-				sf.loadFile();
-				rp.changeToWelcome();
-			}
-		});
+        dialogBox = new AccountDialogBox();
+        dialogBox.setGlassEnabled(true);
 
-		saveFile.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					Window.alert("You have to login first to save existing models");
-					return;
-				}
-				
-				sf.saveFile(false);
-			}
-		});
+        final VerticalPanel filePanel = new VerticalPanel();
+        final Anchor newFile = new Anchor("New model");
+        final Anchor loadFile = new Anchor("Load model");
+        final Anchor saveFile = new Anchor("Save model");
+        final Anchor saveFileAs = new Anchor("Save model As");
+        final Configuration conf = ConfigurationFactory.getConfiguration();
 
-		saveFileAs.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					Window.alert("You have to login first to save existing models");
-					return;
-				}
-				
-				// rp.ChangeToPathway();
-				sf.saveFileAs();
-			}
-		});
+        newFile.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    // Window.
+                    Window.alert("You have to log in to create a new model. You can create an account for free by clicking Register.");
+                    return;
+                }
+                if (conf.getCurrentCollection().length() > 0) {
+                    boolean proceed = Window
+                            .confirm("You are about to create a new model. Make sure to save all changes (if any) to your current model. Do you want to proceed? ");
+                    if (!proceed) {
+                        return;
+                    }
+                }
+                rp.changeToCreateANewCollection();
+            }
+        });
 
-		filePanel.add(newFile);
-		filePanel.add(loadFile);
-		filePanel.add(saveFile);
-		filePanel.add(saveFileAs);
+        loadFile.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (conf.getLogin() == false) {
+                    Window.alert("You have to login first to load existing models");
+                    return;
+                }
 
-		VerticalPanel functionPanel = new VerticalPanel();
-		final Anchor genomeInfo = new Anchor("Genome Information");
-		final Anchor pathwayInfo = new Anchor("Metabolic Pathways");
-		final Anchor optimizationInfo = new Anchor("Optimization");
-		genomeInfo.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					Window.alert("You have to log in and select a model first to view its genome info.");
-					return;
-				}
-				rp.changeToGenome();
-			}
-		});
-		pathwayInfo.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					Window.alert("You have to log in and select a model first to view its pathway info.");
-					return;
-				}
-				rp.ChangeToPathway();
-			}
-		});
-		optimizationInfo.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (!conf.getLogin()) {
-					Window.alert("You have to log in and select a model first to conduct optimization.");
-					return;
-				}
-				rp.ChangeToOptimization();
-			}
-		});
-		functionPanel.add(genomeInfo);
-		functionPanel.add(pathwayInfo);
-		functionPanel.add(optimizationInfo);
+                if (conf.getCurrentCollection().length() > 0) {
+                    boolean proceed = Window
+                            .confirm("You are about to load a new model. Changes to the current model will be discarded unless you click \"Save Model\" first. Do you want to proceed? ");
+                    if (!proceed) {
+                        return;
+                    }
+                }
 
-		VerticalPanel accountPanel = new VerticalPanel();
-		// final Anchor summaryHistory = new Anchor("Summary");
-		final Anchor passwordChgLink = new Anchor("Change Passwords");
+                sf.loadFile();
+                rp.changeToWelcome();
+            }
+        });
 
-		
-		final FormPanel passwordChangePanel = new FormPanel();
-		passwordChangePanel.setAction(ConfigurationFactory.getConfiguration()
-				.getBaseUrl() + "user/password/change/");
+        saveFile.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    Window.alert("You have to login first to save existing models");
+                    return;
+                }
 
-		passwordChangePanel.setMethod(FormPanel.METHOD_POST);
+                sf.saveFile(false);
+            }
+        });
 
-		Grid changePasswordGrid = new Grid(3, 2);
-		Label newPassword = new Label("New Password");
-		final PasswordTextBox newPasswordBox = new PasswordTextBox();
-		Label confirmPassword = new Label("Confirm Password");
-		final PasswordTextBox confirmPasswordBox = new PasswordTextBox();
-		Button changeButton = new Button("Change Password");
-		Button cancelButton = new Button("Cancel");
+        saveFileAs.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    Window.alert("You have to login first to save existing models");
+                    return;
+                }
 
-		newPasswordBox.setName("newpassword");
-		confirmPasswordBox.setName("confirmpassword");
+                // rp.ChangeToPathway();
+                sf.saveFileAs();
+            }
+        });
 
-		changePasswordGrid.setWidget(0, 0, newPassword);
-		changePasswordGrid.setWidget(0, 1, newPasswordBox);
-		changePasswordGrid.setWidget(1, 0, confirmPassword);
-		changePasswordGrid.setWidget(1, 1, confirmPasswordBox);
-		changePasswordGrid.setWidget(2, 0, changeButton);
-		changePasswordGrid.setWidget(2, 1, cancelButton);
+        filePanel.add(newFile);
+        filePanel.add(loadFile);
+        filePanel.add(saveFile);
+        filePanel.add(saveFileAs);
 
-		passwordChangePanel.add(changePasswordGrid);
-		changeButton.addClickHandler(new ClickHandler() {
+        VerticalPanel functionPanel = new VerticalPanel();
+        final Anchor genomeInfo = new Anchor("Genome Information");
+        final Anchor pathwayInfo = new Anchor("Metabolic Pathways");
+        final Anchor optimizationInfo = new Anchor("Optimization");
+        genomeInfo.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    Window.alert("You have to log in and select a model first to view its genome info.");
+                    return;
+                }
+                rp.changeToGenome();
+            }
+        });
+        pathwayInfo.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    Window.alert("You have to log in and select a model first to view its pathway info.");
+                    return;
+                }
+                rp.ChangeToPathway();
+            }
+        });
+        optimizationInfo.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (!conf.getLogin()) {
+                    Window.alert("You have to log in and select a model first to conduct optimization.");
+                    return;
+                }
+                rp.ChangeToOptimization();
+            }
+        });
+        functionPanel.add(genomeInfo);
+        functionPanel.add(pathwayInfo);
+        functionPanel.add(optimizationInfo);
 
-			@Override
-			public void onClick(ClickEvent event) {
-				if (newPasswordBox.getText().isEmpty()
-						|| newPasswordBox.getText().isEmpty()) {
-					Window.alert("Please check the new password");
-					return;
-				}
+        VerticalPanel accountPanel = new VerticalPanel();
+        // final Anchor summaryHistory = new Anchor("Summary");
+        final Anchor passwordChgLink = new Anchor("Change Passwords");
 
-				if (!newPasswordBox.getText().equals(
-						confirmPasswordBox.getText())) {
-					Window.alert("Please confirm the new password");
-					return;
-				}
-				passwordChangePanel.submit();
-				// accountManagementPanel.setVisible(false);
-				//
-			}
 
-		});
+        final FormPanel passwordChangePanel = new FormPanel();
+        passwordChangePanel.setAction(ConfigurationFactory.getConfiguration()
+                .getBaseUrl() + "user/password/change/");
 
-		cancelButton.addClickHandler(new ClickHandler() {
+        passwordChangePanel.setMethod(FormPanel.METHOD_POST);
 
-			@Override
-			public void onClick(ClickEvent event) {
-				passwordChangePanel.setVisible(false);
-			}
-		});
+        Grid changePasswordGrid = new Grid(3, 2);
+        Label newPassword = new Label("New Password");
+        final PasswordTextBox newPasswordBox = new PasswordTextBox();
+        Label confirmPassword = new Label("Confirm Password");
+        final PasswordTextBox confirmPasswordBox = new PasswordTextBox();
+        Button changeButton = new Button("Change Password");
+        Button cancelButton = new Button("Cancel");
 
-		passwordChangePanel.addSubmitHandler(new FormPanel.SubmitHandler() {
+        newPasswordBox.setName("newpassword");
+        confirmPasswordBox.setName("confirmpassword");
 
-			@Override
-			public void onSubmit(SubmitEvent event) {
-				;
-			}
-		});
+        changePasswordGrid.setWidget(0, 0, newPassword);
+        changePasswordGrid.setWidget(0, 1, newPasswordBox);
+        changePasswordGrid.setWidget(1, 0, confirmPassword);
+        changePasswordGrid.setWidget(1, 1, confirmPasswordBox);
+        changePasswordGrid.setWidget(2, 0, changeButton);
+        changePasswordGrid.setWidget(2, 1, cancelButton);
 
-		passwordChangePanel
-				.addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+        passwordChangePanel.add(changePasswordGrid);
+        changeButton.addClickHandler(new ClickHandler() {
 
-					@Override
-					public void onSubmitComplete(SubmitCompleteEvent event) {
-						if (event.getResults().contains("successfully")) {
-							passwordChangePanel.setVisible(false);
-							Window.alert("Password changed");
-						}
-					}
-				});
-		
-		passwordChgLink.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				if (conf.getLogin() == false) {
-					Window.alert("You have to login first to change your password.");
-					return;
-				}
-				else {
-					passwordChangePanel.setVisible(true);
-				}
-			}
-		});
-		
-		accountPanel.add(passwordChgLink);
-		accountPanel.add(passwordChangePanel);
-		passwordChangePanel.setVisible(false);
-		
+            @Override
+            public void onClick(ClickEvent event) {
+                if (newPasswordBox.getText().isEmpty()
+                        || newPasswordBox.getText().isEmpty()) {
+                    Window.alert("Please check the new password");
+                    return;
+                }
 
-		VerticalPanel biggerLeftPanel = new VerticalPanel();
-		
-		StackPanel leftPanel = new StackPanel();
-		leftPanel.add(filePanel, "Build/Load/Save a Model", false);
-		leftPanel.add(functionPanel, "Pathways & FBA", false);
-		leftPanel.add(accountPanel, "Account Management", false);
-		Label user_manual = new Label();
-		user_manual.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				Window.open("http://tanglab.engineering.wustl.edu/static/MicrobesFlux_User_Manual.pdf", "_blank", null);
-			}
-		});
-		leftPanel.add(user_manual);
-		
-		biggerLeftPanel.add(leftPanel);
-	    return biggerLeftPanel;
-	}
+                if (!newPasswordBox.getText().equals(
+                        confirmPasswordBox.getText())) {
+                    Window.alert("Please confirm the new password");
+                    return;
+                }
+                passwordChangePanel.submit();
+                // accountManagementPanel.setVisible(false);
+                //
+            }
+
+        });
+
+        cancelButton.addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                passwordChangePanel.setVisible(false);
+            }
+        });
+
+        passwordChangePanel.addSubmitHandler(new FormPanel.SubmitHandler() {
+
+            @Override
+            public void onSubmit(SubmitEvent event) {
+                ;
+            }
+        });
+
+        passwordChangePanel
+                .addSubmitCompleteHandler(new FormPanel.SubmitCompleteHandler() {
+
+                    @Override
+                    public void onSubmitComplete(SubmitCompleteEvent event) {
+                        if (event.getResults().contains("successfully")) {
+                            passwordChangePanel.setVisible(false);
+                            Window.alert("Password changed");
+                        }
+                    }
+                });
+
+        passwordChgLink.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                if (conf.getLogin() == false) {
+                    Window.alert("You have to login first to change your password.");
+                    return;
+                } else {
+                    passwordChangePanel.setVisible(true);
+                }
+            }
+        });
+
+        accountPanel.add(passwordChgLink);
+        accountPanel.add(passwordChangePanel);
+        passwordChangePanel.setVisible(false);
+
+
+        VerticalPanel biggerLeftPanel = new VerticalPanel();
+
+        StackPanel leftPanel = new StackPanel();
+        leftPanel.add(filePanel, "Build/Load/Save a Model", false);
+        leftPanel.add(functionPanel, "Pathways & FBA", false);
+        leftPanel.add(accountPanel, "Account Management", false);
+        Label user_manual = new Label();
+        user_manual.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                Window.open("http://tanglab.engineering.wustl.edu/static/MicrobesFlux_User_Manual.pdf", "_blank", null);
+            }
+        });
+        leftPanel.add(user_manual);
+
+        biggerLeftPanel.add(leftPanel);
+        return biggerLeftPanel;
+    }
 }
 
 
 class AccountDialogBox extends DialogBox {
-	
-	public void ChangeToPasswordChange() {
-		this.center();
 
-	}
-	
-	public void ChangeToSummary() {
-		this.center();
-		
-		VerticalPanel summaryPanel = new VerticalPanel();
+    public void ChangeToPasswordChange() {
+        this.center();
 
-		final ListGrid accountSummary = new ListGrid();
-		accountSummary.setWidth(400);
-		accountSummary.setHeight(500);
-		accountSummary.setShowAllRecords(true);
-		accountSummary.setDataSource(AccountSummaryDS.getInstance());
+    }
 
-		ListGridField date = new ListGridField("date");
-		ListGridField model = new ListGridField("model");
-		ListGridField type = new ListGridField("type");
-		ListGridField status = new ListGridField("status");
-		// ListGridField url = new ListGridField("url");
+    public void ChangeToSummary() {
+        this.center();
 
-		accountSummary.setFields(date, model, type, status);
-		accountSummary.setAutoFetchData(true);
+        VerticalPanel summaryPanel = new VerticalPanel();
 
-		Button buttonExit = new Button("Exit Summary");
-		buttonExit.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				hide();
-			}
-		});
+        final ListGrid accountSummary = new ListGrid();
+        accountSummary.setWidth(400);
+        accountSummary.setHeight(500);
+        accountSummary.setShowAllRecords(true);
+        accountSummary.setDataSource(AccountSummaryDS.getInstance());
 
-		summaryPanel.add(accountSummary);
-		summaryPanel.add(buttonExit);
-		setWidget(summaryPanel);		
-	}
-	
+        ListGridField date = new ListGridField("date");
+        ListGridField model = new ListGridField("model");
+        ListGridField type = new ListGridField("type");
+        ListGridField status = new ListGridField("status");
+        // ListGridField url = new ListGridField("url");
+
+        accountSummary.setFields(date, model, type, status);
+        accountSummary.setAutoFetchData(true);
+
+        Button buttonExit = new Button("Exit Summary");
+        buttonExit.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                hide();
+            }
+        });
+
+        summaryPanel.add(accountSummary);
+        summaryPanel.add(buttonExit);
+        setWidget(summaryPanel);
+    }
+
 }

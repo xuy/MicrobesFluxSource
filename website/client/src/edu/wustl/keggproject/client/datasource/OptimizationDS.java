@@ -32,45 +32,44 @@ import com.smartgwt.client.data.fields.DataSourceIntegerField;
 import com.smartgwt.client.types.DSDataFormat;
 import com.smartgwt.client.types.FieldType;
 import com.smartgwt.client.types.RPCTransport;
-
 import edu.wustl.keggproject.client.ConfigurationFactory;
 
 public class OptimizationDS extends RestDataSource {
-	private static OptimizationDS instance = null;
-	private static String myurl = ConfigurationFactory.getConfiguration()
-			.getBaseUrl();
+    private static OptimizationDS instance = null;
+    private static String myurl = ConfigurationFactory.getConfiguration()
+            .getBaseUrl();
 
-	private OptimizationDS(String id) {
-		setID(id);
-		// Cross domain JSON
-		setDataFormat(DSDataFormat.JSON);
-		setDataTransport(RPCTransport.SCRIPTINCLUDE);
-		setCallbackParam("callback");
+    private OptimizationDS(String id) {
+        setID(id);
+        // Cross domain JSON
+        setDataFormat(DSDataFormat.JSON);
+        setDataTransport(RPCTransport.SCRIPTINCLUDE);
+        setCallbackParam("callback");
 
-		DataSourceIntegerField pkField = new DataSourceIntegerField("pk");
-		pkField.setHidden(true);
-		pkField.setPrimaryKey(true);
+        DataSourceIntegerField pkField = new DataSourceIntegerField("pk");
+        pkField.setHidden(true);
+        pkField.setPrimaryKey(true);
 
-		DataSourceField rexpr = new DataSourceField("r", FieldType.TEXT,
-				"Right");
-		DataSourceField symbol = new DataSourceField("s", FieldType.TEXT,
-				"Symbol");
-		DataSourceField lexpr = new DataSourceField("l", FieldType.TEXT, "Left");
-		// DataSourceTextField pathway = new DataSourceTextField("pathway",
-		// "Pathway");
-		// pathway.setHidden(true);
-		// pathway.setValueMap("")
-		setFields(pkField, rexpr, symbol, lexpr);
+        DataSourceField rexpr = new DataSourceField("r", FieldType.TEXT,
+                "Right");
+        DataSourceField symbol = new DataSourceField("s", FieldType.TEXT,
+                "Symbol");
+        DataSourceField lexpr = new DataSourceField("l", FieldType.TEXT, "Left");
+        // DataSourceTextField pathway = new DataSourceTextField("pathway",
+        // "Pathway");
+        // pathway.setHidden(true);
+        // pathway.setValueMap("")
+        setFields(pkField, rexpr, symbol, lexpr);
 
-		setFetchDataURL(myurl + "optfetch/");
-	}
+        setFetchDataURL(myurl + "optfetch/");
+    }
 
-	public static OptimizationDS getInstance() {
-		if (instance == null) {
-			instance = new OptimizationDS("optimization");
-			return instance;
-		} else {
-			return instance;
-		}
-	}
+    public static OptimizationDS getInstance() {
+        if (instance == null) {
+            instance = new OptimizationDS("optimization");
+            return instance;
+        } else {
+            return instance;
+        }
+    }
 }

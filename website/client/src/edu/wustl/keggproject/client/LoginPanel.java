@@ -34,38 +34,38 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class LoginPanel {
 
-	private RightPanel rp;
+    private RightPanel rp;
 
-	public void setRightPanel(RightPanel r) {
-		rp = r;
-	}
+    public void setRightPanel(RightPanel r) {
+        rp = r;
+    }
 
-	public Widget getLoginPanel() {
-		HorizontalPanel tabPanel = new HorizontalPanel();
-		final Anchor welcome = new Anchor("[Welcome]");
-		final Anchor logIn = new Anchor("[Login]");
-		final Anchor register = new Anchor("[Register]");
-		welcome.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				rp.changeToWelcome();
-			}
-		});
-		logIn.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				rp.ChangeToLogin(logIn);
-			}
-		});
-		register.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				rp.ChangeToRegister();
-			}
-		});
+    public Widget getLoginPanel() {
+        HorizontalPanel tabPanel = new HorizontalPanel();
+        final Anchor welcome = new Anchor("[Welcome]");
+        final Anchor logIn = new Anchor("[Login]");
+        final Anchor register = new Anchor("[Register]");
+        welcome.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                rp.changeToWelcome();
+            }
+        });
+        logIn.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                rp.ChangeToLogin(logIn);
+            }
+        });
+        register.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                rp.ChangeToRegister();
+            }
+        });
 
-		tabPanel.add(welcome);
-		tabPanel.add(logIn);
-		tabPanel.add(register);
+        tabPanel.add(welcome);
+        tabPanel.add(logIn);
+        tabPanel.add(register);
 
-		return tabPanel;
-	}
+        return tabPanel;
+    }
 
 }
