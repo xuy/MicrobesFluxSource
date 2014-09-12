@@ -27,33 +27,21 @@
 package edu.wustl.keggproject.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.smartgwt.client.widgets.HTMLPane;
+import com.google.gwt.user.client.ui.*;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 
 public class MicrobesFlux implements EntryPoint {
-
 	public void onModuleLoad() {
-
 		RootPanel rootPanel = RootPanel.get();
 		rootPanel.setSize("2000", "1000");
-		
-		VerticalPanel fullpanel = new VerticalPanel(); // fullpanel==rootpanel; fullpanel=loginpanel+lower;
-		HTMLPane logoPane = new HTMLPane();
-		// TODO: figure out a way to embed iframe.
-		// logoPane.setIFrame("http://tanglab.engineering.wustl.edu/media/logo.html");
-		logoPane.setScrollbarSize(0);	
-		logoPane.setSize("100%", "80px");
-		fullpanel.add(logoPane);
-		
+
+		Image logoImage = new Image();
+		logoImage.setUrl("media/logo.png");
 		LoginPanel loginpanel = new LoginPanel();
-		
-		HorizontalPanel lower = new HorizontalPanel(); // lower=leftp+rightVerticalPanel;
+
 		LeftPanel leftp = new LeftPanel();
 		VerticalPanel rightVerticalPanel = new VerticalPanel();// rightVerticalPanel=sfp+rightp+amp;
 		
@@ -71,13 +59,25 @@ public class MicrobesFlux implements EntryPoint {
 		
 		rightVerticalPanel.add(sfp.getStatusFormPanel());
 		rightVerticalPanel.add(rightp.getRightPanel());
-		
+
+
+		HorizontalPanel lower = new HorizontalPanel(); // lower=leftp+rightVerticalPanel;
 		lower.add(leftp.getLeftPanel());
 		lower.add(rightVerticalPanel);
-		
+
+		VerticalPanel fullpanel = new VerticalPanel(); // fullpanel==rootpanel; fullpanel=loginpanel+lower;
+		fullpanel.add(logoImage);
 		fullpanel.add(loginpanel.getLoginPanel());
 		fullpanel.add(lower);
 		rootPanel.add(fullpanel, 0, 0);
 
+		/*
+		DockLayoutPanel p = new DockLayoutPanel(Style.Unit.CM);
+		p.setSize("100%", "900px");
+		p.addNorth(logoPane, 1000);
+		p.addWest(leftp.getLeftPanel(), 1000);
+		p.addEast(rightVerticalPanel, 1000);
+		rootPanel.add(p);
+		*/
 	}
 }
