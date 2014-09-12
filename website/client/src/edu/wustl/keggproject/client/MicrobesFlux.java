@@ -27,57 +27,60 @@
 package edu.wustl.keggproject.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 
 public class MicrobesFlux implements EntryPoint {
-	public void onModuleLoad() {
-		RootPanel rootPanel = RootPanel.get();
-		rootPanel.setSize("2000", "1000");
+    public void onModuleLoad() {
+        RootPanel rootPanel = RootPanel.get();
+        rootPanel.setSize("2000", "1000");
 
-		Image logoImage = new Image();
-		logoImage.setUrl("media/logo.png");
-		LoginPanel loginpanel = new LoginPanel();
+        Image logoImage = new Image();
+        logoImage.setUrl("media/logo.png");
+        LoginPanel loginpanel = new LoginPanel();
 
-		LeftPanel leftp = new LeftPanel();
-		VerticalPanel rightVerticalPanel = new VerticalPanel();// rightVerticalPanel=sfp+rightp+amp;
-		
-		RightPanel rightp = new RightPanel();
-		StatusFormPanel sfp = new StatusFormPanel();
-		
-		rightp.initialize();
-		sfp.initialize();
+        LeftPanel leftp = new LeftPanel();
+        VerticalPanel rightVerticalPanel = new VerticalPanel();// rightVerticalPanel=sfp+rightp+amp;
 
-		leftp.setRightPanel(rightp);
-		leftp.setStatusFormPanel(sfp);
-		
-		rightp.setStatusFormPanel(sfp);
-		loginpanel.setRightPanel(rightp);
-		
-		rightVerticalPanel.add(sfp.getStatusFormPanel());
-		rightVerticalPanel.add(rightp.getRightPanel());
+        RightPanel rightp = new RightPanel();
+        StatusFormPanel sfp = new StatusFormPanel();
+
+        rightp.initialize();
+        sfp.initialize();
+
+        leftp.setRightPanel(rightp);
+        leftp.setStatusFormPanel(sfp);
+
+        rightp.setStatusFormPanel(sfp);
+        loginpanel.setRightPanel(rightp);
+
+        rightVerticalPanel.add(sfp.getStatusFormPanel());
+        rightVerticalPanel.add(rightp.getRightPanel());
 
 
-		HorizontalPanel lower = new HorizontalPanel(); // lower=leftp+rightVerticalPanel;
-		lower.add(leftp.getLeftPanel());
-		lower.add(rightVerticalPanel);
+        HorizontalPanel lower = new HorizontalPanel(); // lower=leftp+rightVerticalPanel;
+        lower.add(leftp.getLeftPanel());
+        lower.add(rightVerticalPanel);
 
-		VerticalPanel fullpanel = new VerticalPanel(); // fullpanel==rootpanel; fullpanel=loginpanel+lower;
-		fullpanel.add(logoImage);
-		fullpanel.add(loginpanel.getLoginPanel());
-		fullpanel.add(lower);
-		rootPanel.add(fullpanel, 0, 0);
+        VerticalPanel fullpanel = new VerticalPanel(); // fullpanel==rootpanel; fullpanel=loginpanel+lower;
+        fullpanel.add(logoImage);
+        fullpanel.add(loginpanel.getLoginPanel());
+        fullpanel.add(lower);
+        rootPanel.add(fullpanel, 0, 0);
 
 		/*
-		DockLayoutPanel p = new DockLayoutPanel(Style.Unit.CM);
+        DockLayoutPanel p = new DockLayoutPanel(Style.Unit.CM);
 		p.setSize("100%", "900px");
 		p.addNorth(logoPane, 1000);
 		p.addWest(leftp.getLeftPanel(), 1000);
 		p.addEast(rightVerticalPanel, 1000);
 		rootPanel.add(p);
 		*/
-	}
+    }
 }

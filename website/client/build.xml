@@ -17,7 +17,7 @@
                 <pathelement location="${src.dir}" />
                 <path refid="compile.classpath" />
             </classpath>
-            <arg line="-logLevel INFO" />
+            <arg line="-logLevel INFO -localWorkers 4" />
             <jvmarg value="-Xmx1024M" />
             <arg value="edu.wustl.keggproject.MicrobesFlux" />
         </java>

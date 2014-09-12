@@ -27,57 +27,57 @@
 package edu.wustl.keggproject.client;
 
 public class Configuration {
-	private String baseUrl = "http://www.microbesflux.org/flux/";
-	private String email = "";
-	private String uploadFile="";
-	
-	private boolean login = false;
+    private String baseUrl = "http://www.microbesflux.org/flux/";
+    private String email = "";
+    private String uploadFile = "";
 
-	public void setLogin(boolean l) {
-		login = l;
-	}
-	
-	public boolean getLogin() {
-		return login;
-	}
-	
-	public String getBaseUrl() {
-		return baseUrl;
-	}
+    private boolean login = false;
+    private String currentCollection = "";
 
-	public void setBaseURL(String baseurl) {
-		this.baseUrl = baseurl;
-	}
+    public Configuration(String secret) {
+        if (!secret.equals("secret")) {
+            throw new RuntimeException(
+                    "Not suppose to call the constructor that way");
+        }
+    }
 
-	public String getCurrentCollection() {
-		return currentCollection;
-	}
-	
-	public String getCurrentEmail() {
-		return email;
-	}
-	
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public boolean getLogin() {
+        return login;
+    }
 
-	public String getUploadFile() {
-		return uploadFile;
-	}
-	
-	public void setUploadFile(String f) {
-		uploadFile = f;
-	}
-	public void setCurrentCollection(String currentCollection) {
-		this.currentCollection = currentCollection;
-	}
+    public void setLogin(boolean l) {
+        login = l;
+    }
 
-	private String currentCollection = "";
+    public String getBaseUrl() {
+        return baseUrl;
+    }
 
-	public Configuration(String secret) {
-		if (!secret.equals("secret")) {
-			throw new RuntimeException(
-					"Not suppose to call the constructor that way");
-		}
-	}
+    public void setBaseURL(String baseurl) {
+        this.baseUrl = baseurl;
+    }
+
+    public String getCurrentCollection() {
+        return currentCollection;
+    }
+
+    public void setCurrentCollection(String currentCollection) {
+        this.currentCollection = currentCollection;
+    }
+
+    public String getCurrentEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getUploadFile() {
+        return uploadFile;
+    }
+
+    public void setUploadFile(String f) {
+        uploadFile = f;
+    }
 }
