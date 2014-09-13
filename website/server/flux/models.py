@@ -12,16 +12,14 @@ class Profile(models.Model):
     diskfile    = models.FileField(max_length=100, upload_to=user_filebase + "fba")
     status      = models.CharField(max_length= 30)
     model_type  = models.CharField(max_length= 10)
-    result_url  = models.URLField(max_length=200)
     submitted   = models.BooleanField(default=False)
     submitted_date = models.CharField(max_length=30)
-    dfba_file   = models.FileField(max_length=100, upload_to=user_filebase + "dfba")
 
 class Compound(models.Model):
     name      = models.CharField(max_length = 10)
     alias     = models.CharField(max_length = 10)
     long_name = models.CharField(max_length =140)
-    
+
     def __unicode__(self):
         return self.name + " A:" + self.alias + " L:" + self.long_name
 
@@ -34,4 +32,17 @@ class Task(models.Model):
     status    = models.CharField(max_length = 10)
     def __unicode__(self):
         return str(self.task_id) + "," + self.main_file + "," + self.task_type + "," + self.email + "," + self.status + "," + self.additional_file
-    
+
+# User can save/load their models. We put the serialized PathwayNetwork
+# object in "Collection".
+class Collection(models.Model):
+    id =  models.AutoField(primary_key = True)
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length = 140)
+    pickle = models.BinaryField()
+
+# Intermediate file storage
+class UserFile(models.Model):
+    file_id = models.AutoField(primary_key = True)
+    user_id = models.ForeignKey(User)
+    collection_id = models.ForeignKey(Collection)

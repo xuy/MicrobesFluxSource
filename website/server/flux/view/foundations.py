@@ -1,20 +1,68 @@
-from flux.parser.keggpathway import PathwayNetwork
-from flux.constants import kegg_database
-from flux.view.json import Json
+import cPickle
+import os
+import re
 
 from django.http import HttpResponse
-import os
 
-import re
+from flux.constants import kegg_database
+from flux.models import Collection
+from flux.parser.keggpathway import PathwayNetwork
+from flux.view.json import Json
+
 digital_pattern = re.compile(r'.*(\d+)')
 
-def retrieve_collection(collection_name, s):
-      # s is session, this method is obsolete now
-    if s['collection_name'] != collection_name:
-        # input collection_name is not current in session
-        return None
-    return s['collection']
+### Methods to interact with Collection in DB.
+def get_collection_names(u):
+    p = Collection.objects.filter(user = u)
+    result = [x.name for x in p]
+    return result
 
+def try_get_collection_by_name(user, collection_name):
+    try:
+        c = Collection.objects.get(name = collection_name, user = user)
+        return c
+    except Collection.DoesNotExist:
+        return None
+
+def get_pathway_by_name(user, collection_name):
+    c = try_get_collection_by_name(user, collection_name)
+    if c:
+        collection_obj = cPickle.loads(str(c.pickle))
+        return collection_obj
+    return None
+
+def rename_collection(u, collection_name, new_name):
+    c = try_get_collection_by_name(user, collection_name)
+    if not c:
+        return
+    c.name = newname
+    c.save()
+
+def save_collection_to_disk(user, collection_name, obj):
+    c = try_get_collection_by_name(user, collection_name)
+    if not c:
+        c = Collection()
+        c.user = user
+        c.name = collection_name
+    c.pickle = cPickle.dumps(obj)
+    c.save()
+
+def get_pathway_from_request(request):
+    user = request.user
+    collection_name = request.session['collection_name']
+    pathway = get_pathway_by_name(user, collection_name)
+    if not pathway:
+        logger.fatal("Cannot get pathway to update")
+        return None
+    return pathway
+
+def save_pathway(request, pathway):
+    """ Save updated pathway back to storage """
+    user = request.user
+    collection_name = request.session['collection_name']
+    save_collection_to_disk(user, collection_name, pathway)
+
+# TODO: use this aspect to automatically weave in save_pathway.
 def save_required(method):
     return method in ["pathway_add", "pathway_update", "user_obj_update",
                       "user_obj_fetch", "model_sv", "model_bound_fetch"]

@@ -34,11 +34,11 @@ def user_password_retrieve(request):
     username = request.GET['username_forgot']
     u = User.objects.get(email = username)
     token_generator = PasswordResetTokenGenerator()
-    
+
     token = token_generator.make_token(u)
     u.set_password(token)
     u.save()
-    
+
     msg = MIMEMultipart()
     msg['Subject'] = 'Mail from the MicrobesFlux -- Password reset'
     msg['From'] = 'tanglab@seas.wustl.edu'
@@ -52,7 +52,7 @@ def user_password_retrieve(request):
     server.sendmail(fromaddr, toaddrs, msg.as_string())
     server.quit()
     return HttpResponse(content = """New Email sent!""", status = 200, content_type = "text/html")
-    
+
 def user_add(request):
     uname = request.POST['username']
     pwd = request.POST['password']
@@ -63,11 +63,11 @@ def user_add(request):
         user = User.objects.create_user(username = uname, email = uname, password = pwd)
         user.save()
         exist = False
-    if not exist:    
+    if not exist:
         return HttpResponse(content = """Successfully added""", status = 200, content_type = "text/html")
     else:
         return HttpResponse(content = """Email exist""", status = 200, content_type = "text/html")
-        
+
 @login_required
 def user_password_change(request):
     uname = request.user.username
@@ -112,7 +112,7 @@ def user_summary(request):
         ri.add_pair("type", str(p.model_type))
         ri.add_pair("status", str(p.status))
         r.add_item(ri)
-    
+
     result += "{ response:     { status : 0, startRows: 0 , endRow: "
     if (len(plist) > 0):
         result += str(len(plist) - 1)

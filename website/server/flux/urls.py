@@ -1,9 +1,8 @@
 from django.conf.urls import patterns
 from django.contrib import auth
 
-#from view.pathway_view import pathway_add
-from view.pathway_view import pathway_add_check
 from view.pathway_view import pathway_add
+from view.pathway_view import pathway_add_check
 from view.pathway_view import pathway_update
 from view.pathway_view import pathway_info
 from view.pathway_view import pathway_fetch
@@ -24,22 +23,20 @@ from view.model_view import test_ssh
 
 # User/Password related
 from view.user_view import index_page
+
 from view.user_view import user_login
 from view.user_view import user_add
 from view.user_view import user_logout
-from view.user_view import index_page
 from view.user_view import user_summary
 from view.user_view import user_password_retrieve
 from view.user_view import user_password_change
 
 # Related to a collection (model+pathway+userfile)
+from view.collection_view import collection_create # not in JSONview
 from view.collection_view import collection_save
 from view.collection_view import collection_select # not in JSONview
-from view.collection_view import collection_create # not in JSONview
-from view.collection_view import collection_rename # not in JSONview
 from view.collection_view import collection_summary
 from view.collection_view import collection_saveas
-from view.collection_view import collection_info
 
 from task.task import task_list
 from task.task import task_add
@@ -84,9 +81,7 @@ urlpatterns = patterns('',
     (r'^collection/select/', collection_select),    # Test covered
     (r'^collection/create/', collection_create),    # Test covered
     (r'^collection/saveas/', collection_saveas),
-    (r'^collection/rename/', collection_rename),
     (r'^collection/save/', collection_save),        # Test covered
-    (r'^collection/stat/', collection_info),
     (r'^task/list/', task_list),
     (r'^task/add/', task_add),
     (r'^task/remove/', task_remove),
