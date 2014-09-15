@@ -83,9 +83,9 @@ INSTALLED_APPS = (
     'flux',
 )
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+# SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 # CHANGE THE LINE BELOW
-SESSION_FILE_PATH = '/Users/exu/PlayGround/MicrobesFluxSource/website/server/session/'
+# SESSION_FILE_PATH = '/Users/exu/PlayGround/MicrobesFluxSource/website/server/session/'
 LOGIN_URL = '/'
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'

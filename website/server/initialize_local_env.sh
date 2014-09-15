@@ -22,24 +22,18 @@ mkdir -p user_file/fba
 if [[ ! -f microbesflux/settings_local.py ]]; then
  touch microbesflux/settings_local.py 
  echo "MEDIA_ROOT " >> microbesflux/settings_local.py 
- echo "SESSION_FILE_PATH " >> microbesflux/settings_local.py 
 fi
 
 # Change Django settings.
 platform=`uname`
 if [[ $platform == 'Darwin' ]]; then
 	sed -i "" "s%^MEDIA_ROOT.*\$%MEDIA_ROOT = \'${PWD}/user_file/\'%g " microbesflux/settings_local.py
-	sed -i "" "s%^SESSION_FILE_PATH.*\$%SESSION_FILE_PATH = \'${PWD}/session/\'%g " microbesflux/settings_local.py
 else 
 	sed -i "s%^MEDIA_ROOT.*\$%MEDIA_ROOT = \'${PWD}/user_file/\'%g " microbesflux/settings_local.py
-	sed -i "s%^SESSION_FILE_PATH.*\$%SESSION_FILE_PATH = \'${PWD}/session/\'%g " microbesflux/settings_local.py
 fi
-#SESSION_FILE_PATH
 
 # For tests
-touch user_file/test.ampl
 touch user_file/test.map
 touch user_file/test_header.txt
 touch user_file/test_fba_result.txt
-touch user_file/demo_dfba_result.txt
 
