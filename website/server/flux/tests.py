@@ -90,8 +90,6 @@ class JsonTest(TestCase):
 
 class UserViewTest(TestCase):
     fixtures = ['test/users.json', ]
-    def setUp(self):
-        self.client = Client()
 
     def test_add(self):
         print "\nTest     | UserView        | /user/add/\t",
@@ -156,8 +154,6 @@ class UserViewTest(TestCase):
 
 class CollectionViewTest(TestCase):
     fixtures = ['test/users.json', ]
-    def SetUp(self):
-        self.client = Client()
 
     def test_collection_create(self):
         print "\nTest     | CollectionView  | /collection/create/\t",
@@ -179,7 +175,7 @@ class CollectionViewTest(TestCase):
 
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(response.content.find("Collection name") != -1)
+        self.assertTrue(response.content.find("Collection name is already in use") != -1)
 
     def test_collection_info(self):
         print "\nTest     | CollectionView  | /pathway/stat/\t",
@@ -210,8 +206,6 @@ class CollectionViewTest(TestCase):
 
 class PathwayViewTest(TestCase):
     fixtures = ['test/users.json', ]
-    def SetUp(self):
-        self.client = Client()
 
     def test_pathway_add(self):
         print "\nTest     | PathwayView     | /pathway/add/\t",
@@ -292,6 +286,7 @@ class PathwayView_AddCheckTest(TestCase):
 
 class MoreBugCheck(TestCase):
     """ For bugs reported after Sept 1, 2011"""
+    fixtures = ['test/users.json', ]
 
     """ If you do editing to a pathway and save it, when you reload it, it should not change """
     def test_pathway_add_save_knockout(self):
@@ -308,6 +303,8 @@ class MoreBugCheck(TestCase):
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
 
 class ModelViewObjectiveTest(TestCase):
+    fixtures = ['test/users.json', ]
+
     def SetUp(self):
         self.client = Client()
 
@@ -394,10 +391,7 @@ class TaskTest(TestCase):
         self.assertEquals(response.content, " Mail sent ")
 
 class ModelViewBoundTest(TestCase):
-
-    def SetUp(self):
-        self.client = Client()
-
+    fixtures = ['test/users.json', ]
     def test_bound_update(self):
         print "\nTest     | ModelViewObjective   | /model/objective/update/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
@@ -408,6 +402,7 @@ class ModelViewBoundTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
 class ModelViewOptimization(TestCase):
+    fixtures = ['test/users.json', ]
 
     def SetUp(self):
         self.client = Client()
@@ -421,8 +416,6 @@ class ModelViewOptimization(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Heterologous Pathways', 'products':'ATP', 'reactants':'ADP', 'ko':'false'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         self.assertEquals(response.status_code, 200)
-
-
 
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         self.assertEquals(response.status_code, 200)
@@ -466,6 +459,8 @@ class ModelViewOptimization(TestCase):
         response = self.client.get("/model/optimization/?obj_type=1")# biomass
 
 class UploadTest(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_upload(self):
         print "\nTest     | UploadTest   | /model/upload/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
@@ -481,8 +476,11 @@ class UploadTest(TestCase):
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
 
 class TestSbml(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_sbml(self):
         print "\nTest     | TestSbml   | /model/sbml/\t",
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/pathway/update/', {'arrow': '1', 'pathway': 'det00670', 'products':'2 C00234', 'reactants':'1 C00445', 'ko':'true', 'pk':'1655', 'reactionid':'R01655'})
@@ -490,6 +488,8 @@ class TestSbml(TestCase):
         response = self.client.get('/model/sbml/')
 
 class TestDFBA(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_dfba(self):
         print "\nTest     | TestDFBA   | /model/dfba/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
@@ -505,12 +505,14 @@ class TestDFBA(TestCase):
         response = self.client.get('/model/dfba/', {'obj_type':'1','provided_email':'xu.mathena@gmail.com',})
 
 class TestSvg(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_svg(self):
         print "\nTest     | TestSvg   | /model/svg/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
-	response = self.client.get('/model/svg/')
+        response = self.client.get('/model/svg/')
         task = Task.objects.get(task_id = 1)
         self.assertEquals(task.task_type, 'svg')
         self.assertEquals(task.main_file, 'demo')
@@ -528,26 +530,29 @@ class TestOpt(TestCase):
         self.assertEquals(response.status_code, 200)
 
 """
-from view.collection_view import get_collection_from_disk
+from view.collection_view import get_pathway_by_name
 from view.collection_view import save_collection_to_disk
 
 from django.contrib.auth.models import User
 
 class CollectionLogicTest(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_collection_save_load(self):
-        print "\nTest	  | CollectionLogicTest	| get_collection_from_disk\t",
-        response = self.client.post('/user/add/', {'username': 'eric', 'password': '123'})
-        self.assertEquals(200, response.status_code)
-        self.assertEqual("Successfully added", response.content)
+        print "\nTest	  | CollectionLogicTest	| get_pathway_by_name\t",
+        self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         obj = [1, 2, 3]
         u = User.objects.get(email = "eric")
         save_collection_to_disk(u, "test", obj)
-        o = get_collection_from_disk(u, "test")
+        o = get_pathway_by_name(u, "test")
         self.assertEquals(obj, o)
 
 class BoundKnockOutTest(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_back_and_forth_switch(self):
         print "\nTest     | TestBoundKnockout   | /misc/bugs/\t",
+        self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/objective/fetch/',  {'_startRow':0, '_endRow':1000})
@@ -560,8 +565,11 @@ class BoundKnockOutTest(TestCase):
 
 
 class OtherBugTest(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_back_and_forth_switch(self):
         print "\nTest     | TestBug   | /misc/bugs/\t",
+        self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/objective/fetch/',  {'_startRow':0, '_endRow':1000})
@@ -575,13 +583,17 @@ class OtherBugTest(TestCase):
 
 
 class TestToy(TestCase):
+    fixtures = ['test/users.json', ]
+
     def test_toy_constract(self):
         print "\nTest	  | TestToy	| /pathway/fetch for TOY\t",
+        self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'TOY A.Toy.Example', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
 
 """ This tests the TOY example """
 class TestToyOptimization(TestCase):
+    fixtures = ['test/users.json', ]
     def test_toy_dfba(self):
         print "\nTest	  | TestToyOptimization	| dfba for TOY\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
@@ -621,7 +633,7 @@ class TestReportGenerate(TestCase):
 
 class MoreBugCheck(TestCase):
     """ For bugs reported after Sept 1, 2011"""
-
+    fixtures = ['test/users.json', ]
     """ If you do editing to a pathway and save it, when you reload it, it should not change """
     def test_pathway_add_save_knockout(self):
         print "\nTest     | MoreBugCheck     | misc knockout\t",
