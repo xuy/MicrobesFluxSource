@@ -31,9 +31,3 @@ if [[ $platform == 'Darwin' ]]; then
 else 
 	sed -i "s%^MEDIA_ROOT.*\$%MEDIA_ROOT = \'${PWD}/user_file/\'%g " microbesflux/settings_local.py
 fi
-
-# For tests
-touch user_file/test.map
-touch user_file/test_header.txt
-touch user_file/test_fba_result.txt
-

@@ -15,6 +15,16 @@ from view.foundations import *
 from view.json import Json
 from models import Task
 
+import os
+def touch(fnames, times=None):
+    for fname in fnames:
+        with open('user_file/' + fname, 'a'):
+            os.utime('user_file/' + fname, times)
+
+def cleanup(fnames):
+    for f in fnames:
+        os.remove('user_file/' + f)
+
 """ Let Xueyang organize the model file, so that I can do the final round of testing. """
 class PathwayTest(TestCase):
     def setUp(self):
@@ -118,7 +128,7 @@ class UserViewTest(TestCase):
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         self.assertEquals(response.status_code, 200)
 
-        response = self.client.get('/collection/create/', {'collection_name': 'demo1', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'summary', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         self.assertEquals(response.status_code, 200)
         response = self.client.get('/pathway/fetch/',{"_startRow":0, "_endRow":"100"})
         self.assertEquals(response.status_code, 200)
@@ -131,7 +141,7 @@ class UserViewTest(TestCase):
         response = self.client.get('/collection/save/', {})
         self.assertTrue(response.content.find("Collection saved") != -1)
         self.assertEquals(response.status_code, 200)
-        response = self.client.get('/collection/select/', {'collection_name': 'demo1'})
+        response = self.client.get('/collection/select/', {'collection_name': 'summary'})
         self.assertEquals(response.status_code, 200)
         response = self.client.get('/model/optimization/?obj_type=0')
         self.assertEquals(response.status_code, 200)
@@ -292,14 +302,14 @@ class MoreBugCheck(TestCase):
     def test_pathway_add_save_knockout(self):
         print "\nTest     | MoreBugCheck     | misc knockout\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'pathway_ko', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/collection/save/', {})
-        response = self.client.get('/collection/select/', {'collection_name': 'demo'})
+        response = self.client.get('/collection/select/', {'collection_name': 'pathway_ko'})
         response = self.client.get('/pathway/update/', {'arrow': '0', 'pathway': 'det00670', 'products':'2 C00234', 'reactants':'1 C00445', 'ko':'false', 'pk':'1655', 'reactionid':'R01655'})
         expected = """{response:{status:0,data:{"pk":"1655","reactionid":"R01655","ko":"false","reactants":"1 C00445","arrow":"<===>","products":"2 C00234","pathway":"det00670"}}}"""
         self.assertEquals(response.content, expected)
         response = self.client.get('/collection/save/', {})
-        response = self.client.get('/collection/select/', {'collection_name': 'demo'})
+        response = self.client.get('/collection/select/', {'collection_name': 'pathway_ko'})
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
 
 class ModelViewObjectiveTest(TestCase):
@@ -311,7 +321,7 @@ class ModelViewObjectiveTest(TestCase):
     def test_objective_fetch(self):
         print "\nTest     | ModelViewObjective   | /model/objective/fetch/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'obj_fetch', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         expected1 = 'eric({response:{status:0,startRow:0,endRow:362,totalRows:363,data:['
         expected2 = 'r":"R00425","w":"1"}'
@@ -321,7 +331,7 @@ class ModelViewObjectiveTest(TestCase):
     def test_objective_update(self):
         print "\nTest     | ModelViewObjective   | /model/objective/update/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'obj_update', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/model/objective/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         response = self.client.get('/model/objective/update/', {"pk":"299", "r":"R00299", "w":"0.4"})
         expected = """{response:{status:0,data:{"pk":"299","r":"R00299","w":"0.4"}}}"""
@@ -367,7 +377,7 @@ class TaskTest(TestCase):
 
     def test_task_mark(self):
         print "\nTest     | TaskView   | /task/mark/\t",
-        response = self.client.get('/task/add/', {"type":"type1", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"type1", "task":"test_task_add", "email":"xu.mathena@gmail.com", "file":"NULL"})
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
         tid = response.content[0]
@@ -377,25 +387,31 @@ class TaskTest(TestCase):
         self.assertEquals(response.content, "Task Marked")
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, tid + ",test,type1,xu.mathena@gmail.com,Enqueue,NULL")
+        self.assertEquals(response.content, tid + ",test_task_add,type1,xu.mathena@gmail.com,Enqueue,NULL")
 
     """ Ignore this test     """
     def test_task_mail(self):
         print "\nTest     | TaskView   | /task/mail/\t",
-        response = self.client.get('/task/add/', {"type":"dfba", "task":"demo.ampl", "email":"xu.mathena@gmail.com", "file":"NULL"})
+        name = "test_task_mail"
+        files = [ name + '.ampl', name + '.map', name + '_dfba_result.txt', name + '_header.txt']
+        touch(files)
+
+        response = self.client.get('/task/add/', {"type":"dfba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
         tid = response.content[0]
         response = self.client.get('/task/mail/', {"tid":tid})
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.content, " Mail sent ")
+        files.append(name + '_dfba_report.txt')
+        cleanup(files)
 
 class ModelViewBoundTest(TestCase):
     fixtures = ['test/users.json', ]
     def test_bound_update(self):
         print "\nTest     | ModelViewObjective   | /model/objective/update/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'bound_update', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/model/bound/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         self.assertEquals(response.status_code, 200)
         response = self.client.get('/model/bound/update/', {"pk":"01354", "r":"R01354", "l":"4.9", "u":"5.5"})
@@ -410,7 +426,7 @@ class ModelViewOptimization(TestCase):
     def test_add_pathway_should_appear(self):
         print "\nTest     | ModelViewObjective   | /add pathway verify\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'model_view_opt', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
 
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Heterologous Pathways', 'products':'ADP', 'reactants':'ATP', 'ko':'false'})
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Heterologous Pathways', 'products':'ATP', 'reactants':'ADP', 'ko':'false'})
@@ -423,7 +439,7 @@ class ModelViewOptimization(TestCase):
     def test_fba_job_submit0(self):
         print "\nTest     | ModelViewObjective   | /optimization/ for user\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_fba', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
 
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         self.assertEquals(response.status_code, 200)
@@ -436,12 +452,14 @@ class ModelViewOptimization(TestCase):
         response = self.client.get('/model/sv/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         self.assertEquals(response.status_code, 200)
 
-        response = self.client.get("/model/optimization/?obj_type=0")#user
+        response = self.client.get("/model/optimization/?obj_type=0")
+        cleanup(['test_fba.ampl', 'test_fba.map', 'test_fba_header.txt'])
+
 
     def test_fba_job_submit1(self):
         print "\nTest     | ModelViewObjective   | /optimization for biomass\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_fba_biomass', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
 
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         self.assertEquals(response.status_code, 200)
@@ -457,6 +475,8 @@ class ModelViewOptimization(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'899 C00200', 'ko':'false'})
 
         response = self.client.get("/model/optimization/?obj_type=1")# biomass
+        cleanup(['test_fba_biomass.ampl', 'test_fba_biomass.map', 'test_fba_biomass_header.txt', ])
+
 
 class UploadTest(TestCase):
     fixtures = ['test/users.json', ]
@@ -481,11 +501,12 @@ class TestSbml(TestCase):
     def test_sbml(self):
         print "\nTest     | TestSbml   | /model/sbml/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_sbml', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/pathway/update/', {'arrow': '1', 'pathway': 'det00670', 'products':'2 C00234', 'reactants':'1 C00445', 'ko':'true', 'pk':'1655', 'reactionid':'R01655'})
         response = self.client.get('/pathway/add/', {'arrow': '1', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'1 ATP', 'ko':'true'})
         response = self.client.get('/model/sbml/')
+        cleanup(['test_sbml.sbml',])
 
 class TestDFBA(TestCase):
     fixtures = ['test/users.json', ]
@@ -493,7 +514,7 @@ class TestDFBA(TestCase):
     def test_dfba(self):
         print "\nTest     | TestDFBA   | /model/dfba/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_dfba', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'1 ATP', 'ko':'false'})
         expected = 'response:{status:0,data:{"pk":"100001","reactionid":"R100001","ko":"false","reactants":"1 ATP","arrow":"0","products":"BIOMASS","pathway":"BIOMASS"}}}'
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Inflow', 'products':'C01111', 'reactants':'C02222', 'ko':'false'})
@@ -503,6 +524,7 @@ class TestDFBA(TestCase):
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
         response = self.client.get('/model/dfba/', {'obj_type':'1','provided_email':'xu.mathena@gmail.com',})
+        cleanup(['test_dfba.ampl', 'test_dfba.map', 'test_dfba_header.txt', ])
 
 class TestSvg(TestCase):
     fixtures = ['test/users.json', ]
@@ -510,20 +532,21 @@ class TestSvg(TestCase):
     def test_svg(self):
         print "\nTest     | TestSvg   | /model/svg/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_svg', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/svg/')
         task = Task.objects.get(task_id = 1)
         self.assertEquals(task.task_type, 'svg')
-        self.assertEquals(task.main_file, 'demo')
+        self.assertEquals(task.main_file, 'test_svg')
         self.assertEquals(task.email, 'xu.mathena@gmail.com')
         self.assertEquals(task.status, 'TODO')
+        cleanup(['test_svg.adjlist',])
 
 """ The following tests are ignored from this release
 class TestOpt(TestCase):
     def test_opt(self):
         print "\nTest     | TestOpt   | /model/optimization/\t",
-        response = self.client.get('/collection/create/', {'collection_name': 'newdemo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_opt', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/optimization/?obj_type=0')
         # response = self.client.get('/task/mail/', {'tid':'2011-03-30-14:19:24.919410'})
@@ -553,7 +576,7 @@ class BoundKnockOutTest(TestCase):
     def test_back_and_forth_switch(self):
         print "\nTest     | TestBoundKnockout   | /misc/bugs/\t",
         self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_bound', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/objective/fetch/',  {'_startRow':0, '_endRow':1000})
         self.assertEquals(200, response.status_code)
@@ -570,7 +593,7 @@ class OtherBugTest(TestCase):
     def test_back_and_forth_switch(self):
         print "\nTest     | TestBug   | /misc/bugs/\t",
         self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'other_bugs', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/objective/fetch/',  {'_startRow':0, '_endRow':1000})
         self.assertEquals(200, response.status_code)
@@ -585,10 +608,10 @@ class OtherBugTest(TestCase):
 class TestToy(TestCase):
     fixtures = ['test/users.json', ]
 
-    def test_toy_constract(self):
+    def test_toy_construct(self):
         print "\nTest	  | TestToy	| /pathway/fetch for TOY\t",
         self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'TOY A.Toy.Example', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'toy_fetch', 'bacteria': 'TOY A.Toy.Example', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
 
 """ This tests the TOY example """
@@ -605,8 +628,8 @@ class TestToyOptimization(TestCase):
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
-
         response = self.client.get('/model/dfba/?obj_type=1')
+        cleanup(['toyd.ampl', 'toyd.map', 'toyd_header.txt'])
 
     def test_toy_fba(self):
         print "\nTest	  | TestToyOptimization	| fba for TOY\t",
@@ -620,6 +643,7 @@ class TestToyOptimization(TestCase):
         response = self.client.get('/model/bound/update/', {"pk":"2", "r":"Outflow2", "l":"6.4", "u":"6.4"})
         response = self.client.get('/model/bound/update/', {"pk":"9", "r":"Inflow1", "l":"11.0", "u":"11.0"})
         response = self.client.get('/model/optimization/?obj_type=1')
+        cleanup(['toyf.ampl', 'toyf.map', 'toyf_header.txt'])
 
 # response = self.client.get('/task/list/')
 """ This tests the report composition module """
@@ -627,9 +651,14 @@ class TestReportGenerate(TestCase):
     def test_report_generate(self):
         ## We already have something called Demoxx
         print "\nTest	  | TestReportGeneration	| test report generation \t",
-        response = self.client.get('/task/add/', {"type":"fba", "task":"test", "email":"xu.mathena@gmail.com", "file":"NULL"})
+        name = 'test_report_generation'
+        files = [ name + '.ampl', name + '.map', name + '_header.txt', name + '_fba_result.txt']
+        touch(files)
+        response = self.client.get('/task/add/', {"type":"fba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
         response = self.client.get('/task/mail/', {"tid":1})
+        files.append(name + '_fba_report.txt')
+        cleanup(files)
 
 class MoreBugCheck(TestCase):
     """ For bugs reported after Sept 1, 2011"""
