@@ -354,8 +354,12 @@ class TaskTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
         response = self.client.get('/task/list/')
-        expected = """1,test,fba,xu.mathena@gmail.com,TODO,NULL\n2,test,dfba,xu.mathena@gmail.com,TODO,NULL\n3,test,dfba,xueyang@wustl.edu,TODO,one_more\n4,test,svg,xu.mathena@gmail.com,TODO,NULL"""
-        self.assertEquals(response.content, expected)
+        expected_str = [ 'test,fba,xu.mathena@gmail.com,TODO,NULL',
+                         'test,dfba,xu.mathena@gmail.com,TODO,NULL',
+                         'test,dfba,xueyang@wustl.edu,TODO,one_more',
+                         'test,svg,xu.mathena@gmail.com,TODO,NULL']
+        for expected in expected_str:
+            self.assertTrue(expected in response.content)
 
     def test_task_remove(self):
         print "\nTest     | TaskView   | /task/remove/\t",
@@ -535,7 +539,9 @@ class TestSvg(TestCase):
         response = self.client.get('/collection/create/', {'collection_name': 'test_svg', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/svg/')
-        task = Task.objects.get(task_id = 1)
+        tasks = Task.objects.all()
+        self.assertEquals(1, len(tasks))
+        task = tasks[0]
         self.assertEquals(task.task_type, 'svg')
         self.assertEquals(task.main_file, 'test_svg')
         self.assertEquals(task.email, 'xu.mathena@gmail.com')
@@ -645,7 +651,6 @@ class TestToyOptimization(TestCase):
         response = self.client.get('/model/optimization/?obj_type=1')
         cleanup(['toyf.ampl', 'toyf.map', 'toyf_header.txt'])
 
-# response = self.client.get('/task/list/')
 """ This tests the report composition module """
 class TestReportGenerate(TestCase):
     def test_report_generate(self):
@@ -656,7 +661,9 @@ class TestReportGenerate(TestCase):
         touch(files)
         response = self.client.get('/task/add/', {"type":"fba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
-        response = self.client.get('/task/mail/', {"tid":1})
+        tasks = Task.objects.all()
+        self.assertEquals(1, len(tasks))
+        response = self.client.get('/task/mail/', {"tid":tasks[0].task_id})
         files.append(name + '_fba_report.txt')
         cleanup(files)
 
