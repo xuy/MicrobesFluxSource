@@ -34,8 +34,6 @@ def collection_create(request):
         if request.user == None:
             print "Collection create requires login"
         save_collection_to_disk(request.user, collection_name, pathway)
-
-        # request.session['pathway'] = pathway
         request.session['collection_name'] = collection_name
         request.session['email'] = email
         request.session['provided_email'] = email
