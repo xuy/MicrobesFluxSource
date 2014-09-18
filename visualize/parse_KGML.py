@@ -7,8 +7,6 @@
 	Inspired by pyKegg package
 	kudos to the original author 
 """
-
-
 import xml.etree.cElementTree as ET
 import pylab
 
