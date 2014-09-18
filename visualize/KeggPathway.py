@@ -1,21 +1,4 @@
 #@+leo-ver=4-thin
-#@+node:eric.20100607164326.1323:@file /home/eric/xueyang/kegg/kegg_dfba/parser/KeggPathway.py
-#@@language python
-#@@tabwidth -4
-#@+others
-#@+node:eric.20100607164326.1324:KeggPathway declarations
-#@verbatim
-#@+leo-ver=4-thin
-#@verbatim
-#@+node:eric.20100607163523.1244:@file /home/eric/xueyang/kegg/kegg_dfba/parser/KeggPathway.py
-#@verbatim
-#@@language python
-#@verbatim
-#@@tabwidth -4
-#@verbatim
-#@+others
-#@verbatim
-#@+node:eric.20100607163523.1245:KeggPathway declarations
 #!/usr/bin/env python
 """
 Basic class to represent Kegg pathways and nodes.
@@ -24,12 +7,6 @@ You can use the function parse_KGML.KGML2Graph to create a KeggPathway object fr
 """
 import networkx
 
-#@-node:eric.20100607164326.1324:KeggPathway declarations
-#@+node:eric.20100607164326.1325:class KeggPathway
-#@verbatim
-#@-node:eric.20100607163523.1245:KeggPathway declarations
-#@verbatim
-#@+node:eric.20100607163523.1246:class KeggPathway
 class KeggPathway(networkx.DiGraph):
     """
     Represent a Kegg Pathway. Derived from networkx.Digraph, it adds:
@@ -84,22 +61,9 @@ class KeggPathway(networkx.DiGraph):
     labels = {}
     reactions = {}
 
-
-    #@    @+others
-    #@+node:eric.20100607164326.1326:get_node
-    #@verbatim
-    #@    @+others
-    #@verbatim
-    #@+node:eric.20100607163523.1247:get_node
     def get_node(self, node):
         return self[node]
 
-    #@-node:eric.20100607164326.1326:get_node
-    #@+node:eric.20100607164326.1327:get_genes
-    #@verbatim
-    #@-node:eric.20100607163523.1247:get_node
-    #@verbatim
-    #@+node:eric.20100607163523.1248:get_genes
     def get_genes(self):
         """
         return a subgraph composed only by the genes
@@ -113,7 +77,7 @@ class KeggPathway(networkx.DiGraph):
         >>> print subgraph.nodes()
         ['gene1']
         """
-#        subgraph = self.subgraph([node for node in self.nodes() if self.get_node(node)['type'] == 'gene'])
+#       subgraph = self.subgraph([node for node in self.nodes() if self.get_node(node)['type'] == 'gene'])
         genes = []
         labels = {}
         for node1 in self.nodes():
@@ -127,12 +91,6 @@ class KeggPathway(networkx.DiGraph):
         subgraph.labels = labels
         return subgraph
 
-    #@-node:eric.20100607164326.1327:get_genes
-    #@+node:eric.20100607164326.1328:neighbors_labels
-    #@verbatim
-    #@-node:eric.20100607163523.1248:get_genes
-    #@verbatim
-    #@+node:eric.20100607163523.1249:neighbors_labels
     def neighbors_labels(self, node):
         """
         like networkx.graph.neighbours, but returns gene label
@@ -153,30 +111,6 @@ class KeggPathway(networkx.DiGraph):
         labels = [self.get_node(n)['label'] for n in neighbours]
         return {self.get_node(node)['label']: labels}
 
-    #@-node:eric.20100607164326.1328:neighbors_labels
-    #@+node:eric.20100607164326.1329:__repr__
-    #@verbatim
-    #@-node:eric.20100607163523.1249:neighbors_labels
-    #@verbatim
-    #@+node:eric.20100607163523.1250:__repr__
     def __repr__(self):
         return self.title + ' pathway' # TODO: __init__ method to make sure self.title exists
 
-    #@-node:eric.20100607164326.1329:__repr__
-    #@-others
-#@verbatim
-    #@-node:eric.20100607163523.1250:__repr__
-#@verbatim
-    #@-others
-#@-node:eric.20100607164326.1325:class KeggPathway
-#@-others
-#@verbatim
-#@-node:eric.20100607163523.1246:class KeggPathway
-#@verbatim
-#@-others
-#@verbatim
-#@-node:eric.20100607163523.1244:@file /home/eric/xueyang/kegg/kegg_dfba/parser/KeggPathway.py
-#@verbatim
-#@-leo
-#@-node:eric.20100607164326.1323:@file /home/eric/xueyang/kegg/kegg_dfba/parser/KeggPathway.py
-#@-leo
