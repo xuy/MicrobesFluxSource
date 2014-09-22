@@ -14,7 +14,6 @@ if [[ ! -f microbesflux/constants_local.py ]]; then
 fi
 
 echo "2. Rewrite settings_local.py under microbesflux"
-mkdir -p session
 mkdir -p user_file/dfba
 mkdir -p user_file/fba
 

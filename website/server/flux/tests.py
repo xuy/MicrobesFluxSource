@@ -15,7 +15,6 @@ from view.foundations import *
 from view.json import Json
 from models import Task
 
-import os
 def touch(fnames, times=None):
     for fname in fnames:
         with open('user_file/' + fname, 'a'):

@@ -1,5 +1,6 @@
 # Model = FluxModel
 import os
+import datetime
 from time import gmtime, strftime
 
 from flux.models import Profile
@@ -175,9 +176,9 @@ def svg(request):
     n = request.session['collection_name']
     email = request.session['provided_email']
     write_pathway_for_plot(pathway, n)
-    # Add a task to task queue.
-    t = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
-    t.save()
+    # Add an SVG task to queue.
+    task = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
+    task.save()
     return HttpResponse(content = "SVG Task submitted", status = 200, content_type = "text/html")
 
 def sbml(request):
@@ -210,32 +211,14 @@ def optimization(request):
     f.close()
     mapf.close()
     reportfile.close()
-
-    t = Task(task_type = 'fba', main_file = n, email = email, additional_file = '', status = "TODO")
-    t.save()
-
-    # Locate user data (if any) and update their profiles
-    u = request.user
-    pro = None
-
-    if not u.is_anonymous():
-        try:
-            pro = Profile.objects.get(user = u, name = n)
-        except Profile.DoesNotExist:
-            pass
-
-    if pro:
-        pro.status="submitted"
-        pro.model_type = "fba"
-        import datetime
-        pro.submitted_date = str(datetime.datetime.now())
-        pro.save()
+    # Add an FBA task.
+    task = Task(task_type = 'fba', main_file = n, email = email, additional_file = '', status = "TODO", submitted_date=str(datetime.datetime.now()))
+    task.save()
 
     return HttpResponse(content = "New Optimization problem submitted .. ", status = 200, content_type = "text/html")
 
 
-""" Check names against all the user-defined pathway"""
-""" This function checks the validity of the user uploaded file"""
+""" Validate user uploaded file before sending it out for optimization."""
 def check_user_upload_file_format(pathway, f):
     if not f:
         print "can't read file"
@@ -267,30 +250,6 @@ def check_user_upload_file_format(pathway, f):
         if len(numbers) != length:  #
             print "Number length is not correct"
             return False
-    return True
-
-""" This function checks the validity of the user uploaded file"""
-# TO delete
-def old_check_user_upload_file_format(f):
-    if not f:
-        return False
-    header = f.readline().split(",")
-    if header[0].lower() != "time":
-        return False# it has to be time
-    if header[1].lower() != "biomass":
-        return False
-    length = len(header)
-    current = -1.0
-    for lines in f:
-        try:
-            numbers = map(float, lines.split(","))
-        except:
-            return False
-        if len(numbers) != length:
-            return False
-        if numbers[0] <= current:
-            return False
-        current = numbers[0]
     return True
 
 def file_upload(request):

@@ -37,6 +37,7 @@ def collection_create(request):
         request.session['collection_name'] = collection_name
         request.session['email'] = email
         request.session['provided_email'] = email
+
         return HttpResponse(content = """Collection created """, status = 200, content_type = "text/html")
     else:
         return HttpResponse(content = """Collection name is already in use """, status = 404, content_type = "text/html")

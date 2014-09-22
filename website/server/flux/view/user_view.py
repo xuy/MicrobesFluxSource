@@ -2,10 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.views import password_reset, password_change, password_change_done
-
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
 from django.http import HttpResponse
+
 from flux.view.json import Json
 from flux.view.foundations import *
 
@@ -99,6 +98,7 @@ def index_page(request):
 
 
 # TODO: remove this method, since get_callback is gone.
+# We will email our users about their task id.
 @login_required
 def user_summary(request):
     u = request.user
@@ -107,7 +107,6 @@ def user_summary(request):
     r = Json("array")
     for p in plist:
         ri = Json("object")
-        ri.add_pair("date", str(p.submitted_date))
         ri.add_pair("model", str(p.name))
         ri.add_pair("type", str(p.model_type))
         ri.add_pair("status", str(p.status))
