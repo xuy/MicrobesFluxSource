@@ -205,6 +205,15 @@ class CollectionViewTest(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.content.find("Collection saved") != -1)
 
+    def test_collection_save_as(self):
+        print "\nTest     | CollectionView  | /collection/saveas/\t",
+        response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
+        response = self.client.get('/collection/create/', {'collection_name': 'demo', 'bacteria': 'det D.ethenogenes','email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/save/', {})
+        response = self.client.get('/collection/saveas/', {'new_name':'newname'})
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(response.content.find("Collection renamed") != -1)
+
     def test_collection_select(self):
         print "\nTest     | CollectionView  | /collection/select/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
@@ -560,7 +569,7 @@ class TestOpt(TestCase):
 
 """
 from view.collection_view import get_pathway_by_name
-from view.collection_view import save_collection_to_disk
+from view.collection_view import save_collection
 
 from django.contrib.auth.models import User
 
@@ -572,7 +581,7 @@ class CollectionLogicTest(TestCase):
         self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
         obj = [1, 2, 3]
         u = User.objects.get(email = "eric")
-        save_collection_to_disk(u, "test", obj)
+        save_collection(u, "test", obj)
         o = get_pathway_by_name(u, "test")
         self.assertEquals(obj, o)
 
