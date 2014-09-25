@@ -5,6 +5,7 @@ import unittest
 
 logging.disable(logging.CRITICAL)
 
+import django.core.mail
 from django.test import TestCase
 from django.test.client import Client
 
@@ -15,17 +16,22 @@ from view.foundations import *
 from view.json import Json
 from models import Task
 
-import os
 def touch(fnames, times=None):
     for fname in fnames:
         with open('user_file/' + fname, 'a'):
             os.utime('user_file/' + fname, times)
 
+# TODO: make cleanup a generic function that can live
+# outside Django, so watch dog can cleanup files after
+# task mail is sent.
 def cleanup(fnames):
     for f in fnames:
         os.remove('user_file/' + f)
 
-""" Let Xueyang organize the model file, so that I can do the final round of testing. """
+def get_task_uuid(client):
+    response = client.get('/task/list/')
+    return response.content.split(',')[-2]
+
 class PathwayTest(TestCase):
     def setUp(self):
         self.kegg_database = kegg_database
@@ -94,9 +100,9 @@ class JsonTest(TestCase):
         print "\nTest     | JsonObject      | object pairs\t",
         self.json.type = "object"
         self.json.add_pair("eric", 123)
-        self.json.add_pair("gretchen", True)
+        self.json.add_pair("eric_eric", True)
         self.json.add_pair("random", "random")
-        self.assertEquals ("""{"eric":123,"gretchen":true,"random":"random"}""", repr(self.json))
+        self.assertEquals ("""{"eric":123,"eric_eric":true,"random":"random"}""", repr(self.json))
 
 class UserViewTest(TestCase):
     fixtures = ['test/users.json', ]
@@ -363,10 +369,11 @@ class TaskTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
         response = self.client.get('/task/list/')
-        expected_str = [ 'test,fba,xu.mathena@gmail.com,TODO,NULL',
-                         'test,dfba,xu.mathena@gmail.com,TODO,NULL',
-                         'test,dfba,xueyang@wustl.edu,TODO,one_more',
-                         'test,svg,xu.mathena@gmail.com,TODO,NULL']
+        ## Model name (seen by user), model_type, email for results, task status.
+        expected_str = [ 'test,fba,xu.mathena@gmail.com,TODO',
+                         'test,dfba,xu.mathena@gmail.com,TODO',
+                         'test,dfba,xueyang@wustl.edu,TODO',
+                         'test,svg,xu.mathena@gmail.com,TODO']
         for expected in expected_str:
             self.assertTrue(expected in response.content)
 
@@ -386,7 +393,7 @@ class TaskTest(TestCase):
 
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, str(int(tid)+1) +",ttest2,t2,xu.mathena@gmail.com,TODO,NULL")
+        self.assertTrue(str(int(tid)+1) +",ttest2,t2,xu.mathena@gmail.com,TODO" in response.content)
 
     def test_task_mark(self):
         print "\nTest     | TaskView   | /task/mark/\t",
@@ -400,22 +407,28 @@ class TaskTest(TestCase):
         self.assertEquals(response.content, "Task Marked")
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, tid + ",test_task_add,type1,xu.mathena@gmail.com,Enqueue,NULL")
+        self.assertTrue(tid + ",test_task_add,type1,xu.mathena@gmail.com,Enqueue" in response.content)
 
-    """ Ignore this test     """
     def test_task_mail(self):
         print "\nTest     | TaskView   | /task/mail/\t",
         name = "test_task_mail"
-        files = [ name + '.ampl', name + '.map', name + '_dfba_result.txt', name + '_header.txt']
+
+        response = self.client.get('/task/add/', {"type":"dfba", "task": name, "email":"test@noreply.com", "file":"NULL"})
+        response = self.client.get('/task/list/')
+        uuid = get_task_uuid(self.client)
+        files = [ uuid + suffix for suffix in ['.ampl', '.map', '.result', '.header']]
         touch(files)
 
-        response = self.client.get('/task/add/', {"type":"dfba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
-        response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
         tid = response.content[0]
         response = self.client.get('/task/mail/', {"tid":tid})
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.content, " Mail sent ")
+        self.assertEquals(1, len(django.core.mail.outbox))
+        email = django.core.mail.outbox[0]
+        self.assertTrue('Mail from MicrobesFlux --dFBA' in email.subject)
+        self.assertTrue('test@noreply.com' in email.to)
+        self.assertEquals('test_task_mail_dfba_report.txt', email.attachments[0][0])
         files.append(name + '_dfba_report.txt')
         cleanup(files)
 
@@ -466,7 +479,8 @@ class ModelViewOptimization(TestCase):
         self.assertEquals(response.status_code, 200)
 
         response = self.client.get("/model/optimization/?obj_type=0")
-        cleanup(['test_fba.ampl', 'test_fba.map', 'test_fba_header.txt'])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 
     def test_fba_job_submit1(self):
@@ -488,8 +502,8 @@ class ModelViewOptimization(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'899 C00200', 'ko':'false'})
 
         response = self.client.get("/model/optimization/?obj_type=1")# biomass
-        cleanup(['test_fba_biomass.ampl', 'test_fba_biomass.map', 'test_fba_biomass_header.txt', ])
-
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 class UploadTest(TestCase):
     fixtures = ['test/users.json', ]
@@ -507,6 +521,8 @@ class UploadTest(TestCase):
         response = self.client.post('/model/upload/', {'uploadFormElement': f} )
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
+        file_key = response.content.split()[-1]
+        cleanup(['dfba/' + file_key])
 
 class TestSbml(TestCase):
     fixtures = ['test/users.json', ]
@@ -537,7 +553,8 @@ class TestDFBA(TestCase):
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
         response = self.client.get('/model/dfba/', {'obj_type':'1','provided_email':'xu.mathena@gmail.com',})
-        cleanup(['test_dfba.ampl', 'test_dfba.map', 'test_dfba_header.txt', ])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 class TestSvg(TestCase):
     fixtures = ['test/users.json', ]
@@ -555,7 +572,8 @@ class TestSvg(TestCase):
         self.assertEquals(task.main_file, 'test_svg')
         self.assertEquals(task.email, 'xu.mathena@gmail.com')
         self.assertEquals(task.status, 'TODO')
-        cleanup(['test_svg.adjlist',])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + '.adjlist',])
 
 """ The following tests are ignored from this release
 class TestOpt(TestCase):
@@ -644,21 +662,20 @@ class TestToyOptimization(TestCase):
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
         response = self.client.get('/model/dfba/?obj_type=1')
-        cleanup(['toyd.ampl', 'toyd.map', 'toyd_header.txt'])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
     def test_toy_fba(self):
         print "\nTest	  | TestToyOptimization	| fba for TOY\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-
         response = self.client.get('/collection/create/', {'collection_name': 'toyf', 'bacteria': 'TOY A.Toy.Example', 'email':'xu.mathena@gmail.com'})
-
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Inflow', 'products':'c_g6p', 'reactants':'1 c_glucose', 'ko':'false'})
-
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'Outflow', 'products':'c_Acetate', 'reactants':'1 c_accoa', 'ko':'false'})
         response = self.client.get('/model/bound/update/', {"pk":"2", "r":"Outflow2", "l":"6.4", "u":"6.4"})
         response = self.client.get('/model/bound/update/', {"pk":"9", "r":"Inflow1", "l":"11.0", "u":"11.0"})
         response = self.client.get('/model/optimization/?obj_type=1')
-        cleanup(['toyf.ampl', 'toyf.map', 'toyf_header.txt'])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 """ This tests the report composition module """
 class TestReportGenerate(TestCase):
@@ -666,12 +683,16 @@ class TestReportGenerate(TestCase):
         ## We already have something called Demoxx
         print "\nTest	  | TestReportGeneration	| test report generation \t",
         name = 'test_report_generation'
-        files = [ name + '.ampl', name + '.map', name + '_header.txt', name + '_fba_result.txt']
-        touch(files)
+
         response = self.client.get('/task/add/', {"type":"fba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
         self.assertEquals(response.status_code, 200)
         tasks = Task.objects.all()
         self.assertEquals(1, len(tasks))
+
+        uuid = get_task_uuid(self.client)
+        files = [ uuid + suffix for suffix in ['.ampl', '.map', '.result', '.header']]
+        touch(files)
+
         response = self.client.get('/task/mail/', {"tid":tasks[0].task_id})
         files.append(name + '_fba_report.txt')
         cleanup(files)

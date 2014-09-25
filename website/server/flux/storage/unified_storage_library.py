@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-""" This is the 
+""" This is the
     unified storage library
-    
+
 it provides file storage by key, and generate key for file storage.
 
 """
@@ -11,6 +11,7 @@ import os
 import cPickle
 import uuid
 from flux.constants import user_filebase
+from flux.models import Task
 
 def write_pickle(data, filename):
     f = open(filename, 'wb')
@@ -24,11 +25,11 @@ def read_pickle(name):
 
 class USL:
     __hivemind = {}     # Singleton Pattern, Borg implementation
-    
+
     """ Initial version: use file system to store all the file index"""
     def __init__(self):
         self.__dict__ = self.__hivemind
-        
+
     def initialize(self):
         file_storage = user_filebase + 'file_storage.pk'
 	if os.path.exists(file_storage):
@@ -37,7 +38,7 @@ class USL:
             self.storage = {}
             write_pickle(data = self.storage, filename = file_storage)
         self.__hivemind = self.__dict__
-    
+
     """ Create a key and a file handler mapping"""
     def create(self, namespace):
         file_storage = user_filebase + 'file_storage.pk'
@@ -48,8 +49,8 @@ class USL:
         f = open(user_filebase + namespace + "/" + str_uuid, "w")
         f.close()
         return str_uuid
-        
-    """ Return the file handler. the client will close this file handler""" 
+
+    """ Return the file handler. the client will close this file handler"""
     def get(self, key):
         if not self.storage.has_key(key):
             print "no such file"
@@ -58,7 +59,7 @@ class USL:
             namespace = self.storage[key]
             f = open(user_filebase + namespace + "/" + key, 'r+') # read and write
             return f
-            
+
     """ Given a key, remove """
     def delete(self, key):
         if self.storage.has_key(key):
@@ -67,7 +68,7 @@ class USL:
                 os.remove(user_filebase +  namespace + "/" + key)
             del(self.storage[key])
             write_pickle(data = self.storage, filename = user_filebase + 'file_storage.pk')
-            
+
 if __name__ == "__main__":
     u = USL()
     u.initialize()

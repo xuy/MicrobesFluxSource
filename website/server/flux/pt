@@ -1,2 +1,2 @@
 #!/bin/bash
-python2.4 manage.py test flux.$1
+python manage.py test flux.tests.$1
