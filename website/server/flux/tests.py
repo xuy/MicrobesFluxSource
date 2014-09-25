@@ -5,6 +5,7 @@ import unittest
 
 logging.disable(logging.CRITICAL)
 
+import django.core.mail
 from django.test import TestCase
 from django.test.client import Client
 
@@ -20,6 +21,9 @@ def touch(fnames, times=None):
         with open('user_file/' + fname, 'a'):
             os.utime('user_file/' + fname, times)
 
+# TODO: make cleanup a generic function that can live
+# outside Django, so watch dog can cleanup files after
+# task mail is sent.
 def cleanup(fnames):
     for f in fnames:
         os.remove('user_file/' + f)
@@ -409,7 +413,7 @@ class TaskTest(TestCase):
         print "\nTest     | TaskView   | /task/mail/\t",
         name = "test_task_mail"
 
-        response = self.client.get('/task/add/', {"type":"dfba", "task": name, "email":"xu.mathena@gmail.com", "file":"NULL"})
+        response = self.client.get('/task/add/', {"type":"dfba", "task": name, "email":"test@noreply.com", "file":"NULL"})
         response = self.client.get('/task/list/')
         uuid = get_task_uuid(self.client)
         files = [ uuid + suffix for suffix in ['.ampl', '.map', '.result', '.header']]
@@ -420,6 +424,11 @@ class TaskTest(TestCase):
         response = self.client.get('/task/mail/', {"tid":tid})
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.content, " Mail sent ")
+        self.assertEquals(1, len(django.core.mail.outbox))
+        email = django.core.mail.outbox[0]
+        self.assertTrue('Mail from MicrobesFlux --dFBA' in email.subject)
+        self.assertTrue('test@noreply.com' in email.to)
+        self.assertEquals('test_task_mail_dfba_report.txt', email.attachments[0][0])
         files.append(name + '_dfba_report.txt')
         cleanup(files)
 
@@ -563,7 +572,8 @@ class TestSvg(TestCase):
         self.assertEquals(task.main_file, 'test_svg')
         self.assertEquals(task.email, 'xu.mathena@gmail.com')
         self.assertEquals(task.status, 'TODO')
-        cleanup(['test_svg.adjlist',])
+        uuid = get_task_uuid(self.client)
+        cleanup([uuid + '.adjlist',])
 
 """ The following tests are ignored from this release
 class TestOpt(TestCase):

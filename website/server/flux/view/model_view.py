@@ -148,7 +148,7 @@ def user_bound_update(request):
 from django.core.files.storage import FileSystemStorage
 import subprocess
 
-def write_pathway_for_plot(pathway, n):
+def write_pathway_for_plot(pathway, filename):
     node_adj = {}
     for rname, r in pathway.reactions.iteritems():
         if r.products and r.substrates:
@@ -161,7 +161,7 @@ def write_pathway_for_plot(pathway, n):
                     node_adj[s].append(r.name)
                     node_adj[r.name].append(p)
     fs = FileSystemStorage()
-    f = fs.open(n + ".adjlist", "w")
+    f = fs.open(filename + ".adjlist", "w")
     for key, item in node_adj.iteritems():
         f.write(key)
         f.write(' ')
@@ -175,10 +175,14 @@ def svg(request):
     pathway = get_pathway_from_request(request)
     n = request.session['collection_name']
     email = request.session['provided_email']
-    # TODO(xuy): use uuid
-    write_pathway_for_plot(pathway, n)
+
+    task = Task(task_type = 'svg',
+                main_file = n,
+                email = email,
+                status = "TODO")
+    uuid = str(task.uuid)
+    write_pathway_for_plot(pathway, uuid)
     # Add an SVG task to queue.
-    task = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
     task.save()
     return HttpResponse(content = "SVG Task submitted", status = 200, content_type = "text/html")
 
