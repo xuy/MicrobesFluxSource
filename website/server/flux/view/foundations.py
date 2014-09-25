@@ -31,14 +31,17 @@ def get_pathway_by_name(user, collection_name):
         return collection_obj
     return None
 
-def rename_collection(u, collection_name, new_name):
-    c = try_get_collection_by_name(user, collection_name)
-    if not c:
+def rename_collection(user, collection_name, new_name):
+    existing_c = try_get_collection_by_name(user, collection_name)
+    if not existing_c:
         return
-    c.name = newname
+    c = Collection()
+    c.user = user
+    c.name = new_name
+    c.pickle = existing_c.pickle
     c.save()
 
-def save_collection_to_disk(user, collection_name, obj):
+def save_collection(user, collection_name, obj):
     c = try_get_collection_by_name(user, collection_name)
     if not c:
         c = Collection()
@@ -60,7 +63,7 @@ def save_pathway(request, pathway):
     """ Save updated pathway back to storage """
     user = request.user
     collection_name = request.session['collection_name']
-    save_collection_to_disk(user, collection_name, pathway)
+    save_collection(user, collection_name, pathway)
 
 # TODO: use this aspect to automatically weave in save_pathway.
 def save_required(method):

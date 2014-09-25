@@ -13,3 +13,7 @@ MicrobesFlux processes the following unique characteristics:
  * intuitive and interactive metabolic model reconstruction,
  * users have flexibility to further customize metabolic models,
  * dynamic metabolism modeling support (dFBA), in addition to the static-state metabolism modeling capability (FBA)
+
+Frontend (GWT) and backend (Django) code is stored under website.
+The script folder contains scripts for solving optimization problems remotely.
+The visualize folder contains files for visualize KGML files.

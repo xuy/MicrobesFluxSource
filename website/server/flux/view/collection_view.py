@@ -9,8 +9,8 @@ from flux.view.foundations import *
 @login_required
 # This operation is redundant, we save changes each step.
 def collection_save(request):
-    #collection_name = request.session['collection_name']
-    #save_collection_to_disk(request.user, collection_name, pathway)
+    # collection_name = request.session['collection_name']
+    # save_collection_to_disk(request.user, collection_name, pathway)
     return HttpResponse(content = """Collection saved """, status = 200, content_type = "text/html")
 
 @login_required
@@ -33,7 +33,7 @@ def collection_create(request):
             pathway = generate_pathway(bac_name, collection_name)
         if request.user == None:
             print "Collection create requires login"
-        save_collection_to_disk(request.user, collection_name, pathway)
+        save_collection(request.user, collection_name, pathway)
         request.session['collection_name'] = collection_name
         request.session['email'] = email
         request.session['provided_email'] = email
