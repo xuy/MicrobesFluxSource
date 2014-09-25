@@ -3,7 +3,7 @@ from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from flux.models import Task
 
-########### Helper functions ########### 
+########### Helper functions ###########
 import sys
 
 from email.MIMEText import MIMEText
@@ -14,7 +14,7 @@ COMMASPACE = ', '
 def send_mail(address, attachments, title = ""):
     subject = 'Mail from MicrobesFlux --' + title
     fromaddr = "tanglab@seas.wustl.edu"
-    toaddrs = [address, ] 
+    toaddrs = [address, ]
     content = "Dear MicrobesFlux User:  Thank you for using our website. -- MicrobesFlux"
     email = EmailMessage(subject, content, fromaddr, toaddrs)
 
@@ -26,46 +26,47 @@ def send_mail(address, attachments, title = ""):
         fp.close()
     email.send(fail_silently=False)
 
-def generate_report(name, suffix):
+def generate_report(report_name, report_file, file_uuid):
     fs = FileSystemStorage()
-    
-    amplfile   = name + ".ampl"
-    amplresult = name + suffix + "_result.txt"
-    mapresult  = name + ".map"
-    
+
+    report_header = file_uuid + '.header'
+    ampl_file     = file_uuid + '.ampl'
+    variable_map  = file_uuid + '.map'
+    ampl_result   = file_uuid + '.result'
+
     # Step 0. Write the report file
-    finaloutput = fs.open(name + suffix + "_report.txt", "w") 
+    finaloutput = fs.open(report_file, "w")
 
     #### Step 0.1 Read the variable correspondence
-    fmap  = fs.open(mapresult, "r")
+    fmap  = fs.open(variable_map, "r")
     d = {}
     for l in fmap:
         vname, oldname = l.split()[:2]
         d[vname]  = oldname
     fmap.close()
 
-    ### Step 1: transfer _header to _report 
-    fheader = fs.open(name + "_header.txt", "r")
+    ### Step 1: transfer .header to _report.txt
+    fheader = fs.open(report_header, "r")
     for l in fheader:
         finaloutput.write(l)
     fheader.close()
 
     ### Step 2: transfer ampl to report
-    fampl = fs.open(amplfile, "r")
+    fampl = fs.open(ampl_file, "r")
     for l in fampl:
         finaloutput.write(l)
     fampl.close()
-    
-    ### Step 3: conversions 
+
+    ### Step 3: conversions
     finaloutput.write("\n\n ===  Name conversions between variables and fluxes === \n")
-    fmap = fs.open(mapresult, "r")
+    fmap = fs.open(variable_map, "r")
     for l in fmap:
         finaloutput.write(l)
     fmap.close()
-    
+
     finaloutput.write("\n\n======== Results ========= \n")
-    
-    fampl_result = fs.open(amplresult, "r")
+
+    fampl_result = fs.open(ampl_result, "r")
     fl = fampl_result.xreadlines()
     for l in fl:
         temp = l.split()
@@ -135,21 +136,22 @@ def task_mark(request):
 def task_mail(request):
     tid = request.GET['tid']
     try:
-        to_mail = Task.objects.get(task_id = tid)
-        newf = to_mail.main_file.split(".")[0]  # take the base name
-        address = to_mail.email
-        if to_mail.task_type == "fba":
-            report_file = newf + "_fba_report.txt"
-            generate_report(newf, "_fba")
-            send_mail(address, [report_file,], title = "FBA")    
-        elif to_mail.task_type == "dfba":
-            report_file = newf + "_dfba_report.txt"
-            generate_report(newf, "_dfba")
+        task = Task.objects.get(task_id = tid)
+        report_name = task.main_file.split(".")[0]  # take the base name
+        address = task.email
+        if task.task_type == "fba":
+            report_file = report_name + "_fba_report.txt"
+            generate_report(report_name, report_file, str(task.uuid))
+            send_mail(address, [report_file,], title = "FBA")
+        elif task.task_type == "dfba":
+            report_file = report_name + "_dfba_report.txt"
+            generate_report(report_name, report_file, str(task.uuid))
             send_mail(address, [report_file,], title = "dFBA")
         else:
-            svgfile = newf + "_plot.svg"
+            svgfile = report_name + "_plot.svg"
             send_mail(address, [svgfile,], title = "SVG")
-        to_mail.delete()
+        task.status = 'MAIL_SENT'
+        task.save()
         return HttpResponse(content = """ Mail sent """, status = 200, content_type = "text/html")
     except Task.DoesNotExist:
         return HttpResponse(content = "No such task", status = 200, content_type = "text/html")

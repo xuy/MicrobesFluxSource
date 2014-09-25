@@ -175,6 +175,7 @@ def svg(request):
     pathway = get_pathway_from_request(request)
     n = request.session['collection_name']
     email = request.session['provided_email']
+    # TODO(xuy): use uuid
     write_pathway_for_plot(pathway, n)
     # Add an SVG task to queue.
     task = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
@@ -203,16 +204,23 @@ def optimization(request):
     ot = 'biomass'
     if obj_type == '0':  # customer defined
         ot = 'user'
-    fs = FileSystemStorage()
-    f = fs.open(n + ".ampl", "w")
-    mapf = fs.open( n + ".map", "w")
-    reportfile = fs.open(n + "_header.txt", "w")
-    pathway.output_ampl(f, mapf, reportfile, objective_type = ot )
-    f.close()
-    mapf.close()
-    reportfile.close()
+
     # Add an FBA task.
-    task = Task(task_type = 'fba', main_file = n, email = email, additional_file = '', status = "TODO", submitted_date=str(datetime.datetime.now()))
+    task = Task(task_type = 'fba',
+                main_file = n,
+                email = email,
+                status = "TODO")
+
+    # Get the uuid from task as file name prefix.
+    file_system = FileSystemStorage()
+    uuid = str(task.uuid)
+    ampl_file = file_system.open(uuid + ".ampl", "w")
+    variable_mapping = file_system.open(uuid + ".map", "w")
+    report_header = file_system.open(uuid + ".header", "w")
+    pathway.output_ampl(ampl_file, variable_mapping, report_header, objective_type = ot )
+    ampl_file.close()
+    variable_mapping.close()
+    report_header.close()
     task.save()
 
     return HttpResponse(content = "New Optimization problem submitted .. ", status = 200, content_type = "text/html")
@@ -280,27 +288,39 @@ def dfba_solve(request):
     name = request.session["collection_name"]
     associated_file_key = request.session["dfba_upload"]
     email = request.session['provided_email']
+    task = Task(task_type = 'dfba',
+                main_file = name,
+                email = email,
+                status = "TODO")
 
-    # Use usl to assign a new key
-    fs = FileSystemStorage()
-    f = fs.open(name + ".ampl", "w")
-    mapf = fs.open( name + ".map", "w")
-    reportfile = fs.open(name + "_header.txt", "w")
+    file_system = FileSystemStorage()
+    uuid = str(task.uuid)
 
-    additional = fs.open("dfba/" + associated_file_key, "r")
+    user_upload_temp_filename = "dfba/" + associated_file_key
+    user_upload_temp_file = file_system.open(user_upload_temp_filename, "r")
+
+    ampl_file = file_system.open(uuid + ".ampl", "w")
+    variable_mapping = file_system.open(uuid + ".map", "w")
+    report_header = file_system.open(uuid + ".header", "w")
 
     obj_type = request.GET['obj_type']
     ot = 'biomass'	# 1 = biomass
     if obj_type == '0':  # 0 = customer defined
         ot = 'user'
-    pathway.output_ampl(f, mapf, reportfile, model_type="dfba", additional_file = additional, objective_type = ot)
-    additional.close()
 
-    f.close()
-    mapf.close()
-    reportfile.close()
-    t = Task(task_type = 'dfba', main_file = name, email = email, additional_file = associated_file_key, status = "TODO")
-    t.save()
+    pathway.output_ampl(ampl_file,
+                        variable_mapping,
+                        report_header,
+                        model_type="dfba",
+                        additional_file = user_upload_temp_file,
+                        objective_type = ot)
+    ampl_file.close()
+    variable_mapping.close()
+    report_header.close()
+    user_upload_temp_file.close()
+    # cleanup the temp file from user upload.
+    file_system.delete(user_upload_temp_filename)
+    task.save()
     return HttpResponse(content = "New DFBA optimization problem submitted .. ", status = 200, content_type = "text/html")
 
 # TODO(xuy): change this to a different file transport mechanism

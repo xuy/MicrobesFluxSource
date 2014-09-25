@@ -26,19 +26,21 @@ class Compound(models.Model):
     def __unicode__(self):
         return self.name + " A:" + self.alias + " L:" + self.long_name
 
-# TODO: change main_file, additional_file to uuid_based.
 class Task(models.Model):
     task_id   =  models.AutoField(primary_key = True)
     task_type =  models.CharField(max_length = 10)
+    # The following two fields are deprecated in favor of using uuid.
     main_file =  models.CharField(max_length = 50)
     additional_file =  models.CharField(max_length = 50)
     email     = models.EmailField(max_length = 75)
     status    = models.CharField(max_length = 10)
-    task_uuid =  models.CharField(max_length=250, unique=True, null=False, blank=False, default=uuid4)
-    submitted_date = models.CharField(max_length=30)
+    # Django stable release does not support UUIDField (yet).
+    uuid =  models.CharField(max_length=250, unique=True, null=False, blank=False, default=uuid4, editable = False)
+    submitted_date = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return str(self.task_id) + "," + self.main_file + "," + self.task_type + "," + self.email + "," + self.status + "," + self.task_uuid
+        information = [str(self.task_id), self.main_file, self.task_type, self.email, self.status, self.uuid, str(self.submitted_date)]
+        return ','.join(information)
 
 # User can save/load their models. We put the serialized PathwayNetwork
 # object in "Collection".
