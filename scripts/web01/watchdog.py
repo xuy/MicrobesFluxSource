@@ -1,53 +1,77 @@
 #!/usr/bin/python
+from task_constants import *
+from task_util import parse_task
+from file_transfer import transfer_file
 
-### TODO(xuy): change this to anisble script.
-import time
 from urllib import urlopen
-import subprocess
 
-while True:
-	time.sleep(5)
-	print "Check List"
-	f = urlopen("http://tanglab.engineering.wustl.edu/flux/task/list/")
-	list = []
-	for l in f:
-		list.append(l)
-	if not list:
-		continue
-	#l = list[0]
-	#if not l or l[0]!='2':
-	#	continue
-	for l in list:
-		print "Will parse log",
-		print l
-		ls = l.split(',')
-		tid, pro, type, email = ls[:4]
-		if len(ls) < 5:
-			continue
-		status = ls[4]
-		additional_file = ls[5]
-		print "additional file", additional_file
-		problem= pro
-		print "status is ", status
-		if status != "TODO":
-			continue
-		print "Going to handle task ", problem, " type ", type
-		if type == "$TYPE":
-			continue
-		elif type == "fba":
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".ampl  /home/research/xuy/ampl_to_run/", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem + " -v TID="+tid +" fbajob.sh", shell = True)
-		elif type == "svg":
-			print "watchdog is going to scp " + problem + " to to_plot"
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".adjlist /home/research/xuy/to_plot/", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem + " -v TID="+tid +" plotjob.sh", shell = True)
-		elif type == "dfba":
-			# print "Going to solve a dfba task", l
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".ampl  /home/research/xuy/ampl_to_run/"+problem+"_dfba.ampl", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			# and then give it as JOB to the qsub
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem  + " -v TID="+tid +" dfbajob.sh", shell = True)
-		time.sleep(10)
-		break
+import time
+import subprocess
+import urllib2
+
+def copy_to_server(task_type, uuid):
+    print "Going to copy task uuid " + uuid  + " to server"
+    if task_type == "fba" or task_type == 'dfba':
+        filename = uuid + '.ampl'
+    else:   # svg
+        filename = uuid + '.adjlist'
+    transfer_file(filename)
+
+def get_job_name(task_type):
+    """ Maps task type to the script name that will be submitted via qsub"""
+    if task_type == 'fba':
+        return 'solve_fba.sh'
+    elif task_type == 'dfba':
+        return 'solve_dfba.sh'
+    else:
+        return 'plot_svg.sh'
+
+def mark_task(uuid):
+    print "going to mark task " + uuid + ' as enqueue'
+
+def submit_task(task):
+    task_type = task['type']
+    qsub_command = ['qsub',
+                    '-v UUID=' + task['uuid'],
+                    '-v TID=' + task['id'],
+                    get_job_name(task_type)]
+    command = []
+    command.append('cd ' + opt_script_path)
+    command.append(' '.join(qsub_command))
+    print ';'.join(command)
+
+def handle_todo_task(task):
+    type = task['type']
+    uuid = task['uuid']
+    id = task['id']
+    copy_to_server(type, uuid)
+    mark_task(uuid)
+    submit_task(task)
+
+def run_forever():
+    while True:
+        print "Reading task queue ... "
+        try:
+            f = urlopen(task_queue)
+        except urllib2.URLError, e:
+            # It should not crash the whole watchdog.
+            print e
+            continue
+        list = []
+        for l in f:
+            list.append(l)
+        if not list:
+            continue
+        for l in list:
+            task = parse_task(l)
+            print task
+            problem= task['name']
+            type = task['type']
+            status = task['status']
+            if status == 'TODO':
+                handle_todo_task(task)
+                time.sleep(task_delay_sec)
+        time.sleep(watchdog_interval_sec)
+
+if __name__ == '__main__':
+    run_forever()

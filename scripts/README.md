@@ -1,11 +1,26 @@
-This folder will hold the watchdog daemon process that will run as a 
-forever loop. 
+This folder contains scripts that handles optimization and plotting tasks.
 
-We plan to use ansible for all interactions between this process (web01)
-and the optimiation server (opt01). This script is running on web01.
-Some scripts are running on opt01.
+When user makes a FBA/dFBA request, or a SVG request, we generate a task and a set of
+temporary files that are necessary for that task. The Django framework, running on the
+web server (web01), would maintain the task queue, as well as the set of intermediate
+files.
 
-Watchdog runs a forever loop, and do the following in the loop:
+Web01 is not powerful enough for solving optimization problem though. Thus, we would need
+to employ another machine, opt01, for optimization.
+
+We run a script (watchdog.py) on web01 to process the task queue. The script does three
+things:
+
+1. copy files associated with 'TODO' tasks to opt01.
+2. invoke a script on opt01 to do optimization or plotting
+3. gather results from opt01 and copy those back to web01.
+
+A caveat here is Step 2 is executed on Sun Grid Engine. Scripts (solve_fba.sh etc.)
+under opt01 are submitted through qsub instead of getting executed directly. Thus,
+we communicate with task queue in those scripts once Step 2 is done.
+
+
+
 
    1. Query the task queue from web01, parse the list and figure out tasks that are pending.
    2. Get the uuid of TODO tasks, transmit/push the files into a delicated folder on opt01.
