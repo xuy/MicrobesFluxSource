@@ -18,5 +18,5 @@ def run_command(command):
     client.connect(hostname = opt_server,
                    username = opt_username,
                    key_filename = opt_keyfile)
-    output = client.exec_command(command)
-    return output
+    (stdin, stdout, stderr) = client.exec_command(command)
+    return (stdout.readlines(), stderr.readlines())
