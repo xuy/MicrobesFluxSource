@@ -126,7 +126,7 @@ def task_mark(request):
     tid = request.GET['tid']
     status = 'Enqueue'
     if request.GET.has_key('status'):
-        status = request.GET[['status']
+        status = request.GET['status']
     try:
         to_mark = Task.objects.get(task_id = tid)
         to_mark.status = status
