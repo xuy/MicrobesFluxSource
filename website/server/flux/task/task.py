@@ -124,9 +124,12 @@ def task_unmark(request):
 
 def task_mark(request):
     tid = request.GET['tid']
+    status = 'Enqueue'
+    if request.GET.has_key('status'):
+        status = request.GET['status']
     try:
         to_mark = Task.objects.get(task_id = tid)
-        to_mark.status = "Enqueue"
+        to_mark.status = status
         # TODO: send out a piece of email, saying it is enqueued
         to_mark.save()
         return HttpResponse(content = "Task Marked", status = 200, content_type = "text/html")
