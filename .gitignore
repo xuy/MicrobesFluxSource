@@ -11,5 +11,6 @@ file_storage.pk
 demo_dfba_report.txt
 constants_local.py
 settings_local.py
+task_constants_local.py
 .DS_store
 db.sqlite3
