@@ -30,7 +30,7 @@ def copy_to_server(task):
     else:   # svg
         filename = uuid + '.adjlist'
     if os.path.isfile(web_file_path  + filename):
-        transfer_file(filename)
+        transfer_file(web_file_path + filename, opt_file_path + filename)
         return True
     else:
         mark_task(tid, 'FILE_MISS')
