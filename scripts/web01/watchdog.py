@@ -3,6 +3,7 @@ from task_constants import *
 from task_util import parse_task
 from file_transfer import transfer_file
 from file_transfer import run_command
+from scp import SCPException
 
 import os.path
 import requests
@@ -33,17 +34,26 @@ def copy_to_server(task):
         transfer_file(web_file_path + filename, opt_file_path + filename)
         return True
     else:
-        mark_task(tid, 'FILE_MISS')
+        mark_task(tid, 'FILE_MISS>')
         return False
+
+def copy_from_server(task):
+    task_type = task['type']
+    tid = task['id']
+    uuid = task['uuid']
+    print "Going to copy task uuid " + uuid  + " from server"
+    if task_type == "fba" or task_type == 'dfba':
+        filename = uuid + '.result'
+    else:   # svg
+        filename = uuid + '.svg'
+    transfer_file(opt_file_path + filename,  web_file_path + filename, direction='get')
 
 def get_job_name(task_type):
     """ Maps task type to the script name that will be submitted via qsub"""
-    if task_type == 'fba':
-        return 'solve_fba.sh'
-    elif task_type == 'dfba':
-        return 'solve_dfba.sh'
+    if task_type == 'fba' or task_type == 'dfba':
+        return 'solve_flux.sh'
     else:
-        return 'plot_svg.sh'
+        return 'plot_network.sh'
 
 def parse_task_submission_output(stdout, stderr):
     if len(stdout) > 1 or len(stdout) < 1:
@@ -79,9 +89,20 @@ def handle_todo_task(task):
     print stdout, stderr
     parse_task_submission_output(stdout, stderr)
 
+def handle_optend_task(task):
+    # Copy files from opt to local.
+    try:
+        copy_from_server(task)
+    except SCPException:
+        print "cannot copy file for task ", task
+        return
+    mark_task(task['id'], 'TO_MAIL')
+
+from datetime import datetime
+import sys
 def run_forever():
     while True:
-        print "Reading task queue ... "
+        print "{0}\r".format(datetime.now())
         try:
             r = requests.get(task_queue_list)
         except requests.exceptions.RequestException, e:
@@ -94,7 +115,6 @@ def run_forever():
         if not list:
             continue
         for l in list:
-            print "from list ", l
             task = parse_task(l)
             print task
             problem= task['name']
@@ -102,7 +122,11 @@ def run_forever():
             status = task['status']
             if status == 'TODO':
                 handle_todo_task(task)
-                time.sleep(task_delay_sec)
+            elif status == 'OPT_END':
+                handle_optend_task(task)
+            else:
+                pass
+            time.sleep(task_delay_sec)
         time.sleep(watchdog_interval_sec)
 
 if __name__ == '__main__':
