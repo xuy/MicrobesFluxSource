@@ -5,6 +5,8 @@ watchdog_interval_sec = 5
 task_delay_sec = 10
 task_queue_list = 'http://www.microbesflux.org/flux/task/list/'
 task_queue_mark = 'http://www.microbesflux.org/flux/task/mark/'
+task_queue_mail = 'http://www.microbesflux.org/flux/task/mail/'
+
 
 opt_server = 'cloud.seas.wustl.edu'
 opt_username = 'tanglab-runner'

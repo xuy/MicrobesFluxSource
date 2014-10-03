@@ -84,12 +84,12 @@ def handle_todo_task(task):
     tid = task['id']
     if not copy_to_server(task):
         return 
-    mark_task(tid, 'OPT_INIT')
+    mark_task(tid, 'INIT')
     stdout, stderr = submit_task(task)
     print stdout, stderr
     parse_task_submission_output(stdout, stderr)
 
-def handle_optend_task(task):
+def handle_end_task(task):
     # Copy files from opt to local.
     try:
         copy_from_server(task)
@@ -97,6 +97,14 @@ def handle_optend_task(task):
         print "cannot copy file for task ", task
         return
     mark_task(task['id'], 'TO_MAIL')
+
+def mail_task(task):
+    try:
+        payload = { 'tid': task['id'] }
+        r = requests.get(task_queue_mail, params = payload)
+    except requests.exceptions.RequestException, e:
+        print "Cannot mail task " + tid 
+        print e
 
 from datetime import datetime
 import sys
@@ -109,12 +117,12 @@ def run_forever():
             # It should not crash the whole watchdog.
             print e
             continue
-        list = []
-        for l in r:
-            list.append(l)
-        if not list:
+        task_list = r.text.split('\n')
+        print task_list
+        if not task_list:
             continue
-        for l in list:
+        for l in task_list:
+            print l
             task = parse_task(l)
             print task
             problem= task['name']
@@ -122,11 +130,14 @@ def run_forever():
             status = task['status']
             if status == 'TODO':
                 handle_todo_task(task)
-            elif status == 'OPT_END':
-                handle_optend_task(task)
+            elif status == 'OPT_END' or status == 'PLOT_END':
+                handle_end_task(task)
+            elif status == 'TO_MAIL':
+                print "Going to email task ", task
+                mail_task(task)
             else:
                 pass
-            time.sleep(task_delay_sec)
+            # time.sleep(task_delay_sec)
         time.sleep(watchdog_interval_sec)
 
 if __name__ == '__main__':

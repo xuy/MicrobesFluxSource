@@ -151,8 +151,9 @@ def task_mail(request):
             generate_report(report_name, report_file, str(task.uuid))
             send_mail(address, [report_file,], title = "dFBA")
         else:
-            svgfile = report_name + "_plot.svg"
-            send_mail(address, [svgfile,], title = "SVG")
+            # TODO(xuy): fix the file name here.
+            svg_file = task.uuid + ".svg"
+            send_mail(address, [svgfile,], title = "SVG file for model " + report_name)
         task.status = 'MAIL_SENT'
         task.save()
         return HttpResponse(content = """ Mail sent """, status = 200, content_type = "text/html")

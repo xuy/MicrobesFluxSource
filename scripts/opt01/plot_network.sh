@@ -22,7 +22,7 @@ ${HOME}/bin/python ${HOME}/script/plot.py ${FILE}.adjlist
 fi
 if [ -e ${FILE}.adjlist_plot.svg ]
 then echo "SVG generated."
- cat ${FILE}.adjlist_plot.svg | sed "s/stroke-width: 1.000000/stroke-width: 0.100000/g"  > ${FILE}_plot.svg
+ cat ${FILE}.adjlist_plot.svg | sed "s/stroke-width: 1.000000/stroke-width: 0.100000/g"  > ${FILE}.svg
  rm ${FILE}.adjlist_plot.svg
  wget --spider ${TASK_QUEUE}${TID}${TASK_STATUS_END}
 else
