@@ -409,6 +409,19 @@ class TaskTest(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(tid + ",test_task_add,type1,xu.mathena@gmail.com,Enqueue" in response.content)
 
+    def test_task_mark_customized(self):
+        print "\nTest     | TaskView   | /task/mark/?status=custom_label\t",
+        response = self.client.get('/task/add/', {"type":"type1", "task":"test_task_add", "email":"xu.mathena@gmail.com", "file":"NULL"})
+        response = self.client.get('/task/list/')
+        tid = response.content[0]
+
+        response = self.client.get('/task/mark/', {"tid":tid, "status":"SomeStatus"})
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.content, "Task Marked")
+        response = self.client.get('/task/list/')
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(tid + ",test_task_add,type1,xu.mathena@gmail.com,SomeStatus" in response.content)
+
     def test_task_mail(self):
         print "\nTest     | TaskView   | /task/mail/\t",
         name = "test_task_mail"
