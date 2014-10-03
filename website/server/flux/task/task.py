@@ -155,3 +155,9 @@ def task_mail(request):
         return HttpResponse(content = """ Mail sent """, status = 200, content_type = "text/html")
     except Task.DoesNotExist:
         return HttpResponse(content = "No such task", status = 200, content_type = "text/html")
+
+from django.shortcuts import render
+from django.shortcuts import get_list_or_404
+def task_prettylist(request):
+    task_objects = get_list_or_404(Task)
+    return render(request, 'table.html', {'tasks':task_objects})

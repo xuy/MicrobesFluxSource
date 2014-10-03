@@ -43,6 +43,7 @@ from task.task import task_add
 from task.task import task_remove
 from task.task import task_mail
 from task.task import task_mark
+from task.task import task_prettylist
 
 # from debug import test_mail
 # from jsonview import file_upload
@@ -87,6 +88,7 @@ urlpatterns = patterns('',
     (r'^task/remove/', task_remove),
     (r'^task/mark/', task_mark),
     (r'^task/mail/', task_mail),
+    (r'^task/tasks/', task_prettylist),
     (r'^pathway/query/', pathway_reaction_query),
     # (r'^test/testmail/', test_mail),
 )
