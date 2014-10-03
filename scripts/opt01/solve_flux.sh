@@ -12,6 +12,7 @@ TASK_STATUS_FAIL='&status=OPT_FAIL'
 export PATH=${HOME}:/cluster/cloud/bin/:/cluster/cloud/Ipopt-3.8.3/bin:$PATH
 echo "Going to mark current task "
 wget --spider ${TASK_QUEUE}${TID}${TASK_STATUS_START}
+echo `date "+%Y%m%d%H%M$S"` ampl $USER >> /cluster/cloud/var/log/app-usage  # AMPL usage, requested by seas.
 ampl ${HOME}${TASK_FOLDER}${UUID}.ampl > ${HOME}${TASK_FOLDER}${UUID}.result
 if [ $? -eq 0 ]
 then
