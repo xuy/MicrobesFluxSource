@@ -103,6 +103,32 @@ def task_remove(request):
     except Task.DoesNotExist:
         return HttpResponse(content = "No such task", status = 200, content_type = "text/html")
 
+def cleanup_files(files):
+    fs = FileSystemStorage()
+    removed = []
+    for f in files:
+        if fs.exists(f):
+            fs.delete(f)
+            removed.append(f)
+    return removed
+
+def task_cleanup(request):
+    tid = request.GET['tid']
+    try:
+        to_remove = Task.objects.get(task_id = tid)
+        uuid = to_remove.uuid
+        task_type = to_remove.task_type
+        if task_type == 'fba' or task_type == 'dfba':
+            files = [ uuid + suffix for suffix in ['.ampl', '.map', '.result', '.header', '.report']]
+            removed_files = cleanup_files(files)
+        else:
+            files = [ uuid + suffix for suffix in ['.svg', '.adjlist']]
+            removed_files = cleanup_files(files)
+        to_remove.delete()
+        return HttpResponse(content = "Cleaned up files: " + ','.join(removed_files), status = 200, content_type = "text/html")
+    except Task.DoesNotExist:
+        return HttpResponse(content = "No such task", status = 200, content_type = "text/html")
+
 def task_add(request):
     t_type = request.GET['type']
     t_file = request.GET['task']
@@ -126,7 +152,7 @@ def task_unmark(request):
 
 def task_mark(request):
     tid = request.GET['tid']
-    status = 'Enqueue'
+    status = 'CLOUD'
     if request.GET.has_key('status'):
         status = request.GET['status']
     try:
