@@ -3,7 +3,7 @@ import os, sys
 import logging
 import unittest
 
-# logging.disable(logging.CRITICAL)
+logging.disable(logging.CRITICAL)
 
 import django.core.mail
 from django.test import TestCase
@@ -596,7 +596,7 @@ class TestSvg(TestCase):
         self.assertEquals(1, len(django.core.mail.outbox))
         email = django.core.mail.outbox[0]
         self.assertTrue('Mail from MicrobesFlux -- SVG test_svg' in email.subject)
-        # self.assertTrue('test@noreply.com' in email.to)
+        self.assertTrue('test@noreply.com' in email.to)
         self.assertEquals('test_svg.svg', email.attachments[0][0])
         files.append(uuid + '.adjlist')
         cleanup(files)
