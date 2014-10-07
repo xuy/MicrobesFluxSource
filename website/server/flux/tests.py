@@ -32,6 +32,15 @@ def get_task_uuid(client):
     response = client.get('/task/list/')
     return response.content.split(',')[-2]
 
+def cleanup_task(testcase):
+    response = testcase.client.get('/task/list/')
+    testcase.assertEquals(1, len(response.content.split('\n')))
+    task = response.content.split(',')
+    uuid = task[-2]
+    tid = task[0]
+    response = testcase.client.get('/task/cleanup/', {"tid":tid})
+    testcase.assertTrue('Cleaned up files:' in response.content)
+
 class PathwayTest(TestCase):
     def setUp(self):
         self.kegg_database = kegg_database
@@ -407,7 +416,7 @@ class TaskTest(TestCase):
         self.assertEquals(response.content, "Task Marked")
         response = self.client.get('/task/list/')
         self.assertEquals(response.status_code, 200)
-        self.assertTrue(tid + ",test_task_add,type1,test_email@noreply.com,Enqueue" in response.content)
+        self.assertTrue(tid + ",test_task_add,type1,test_email@noreply.com,CLOUD" in response.content)
 
     def test_task_mark_customized(self):
         print "\nTest     | TaskView   | /task/mark/?status=custom_label\t",
@@ -442,8 +451,9 @@ class TaskTest(TestCase):
         self.assertTrue('Mail from MicrobesFlux --dFBA' in email.subject)
         self.assertTrue('test@noreply.com' in email.to)
         self.assertEquals('test_task_mail_dfba_report.txt', email.attachments[0][0])
-        files.append( uuid + '.report')
-        cleanup(files)
+        response = self.client.get('/task/mail/', {"tid":tid})
+        self.assertEquals(response.status_code, 200)
+        cleanup_task(self)
 
 class ModelViewBoundTest(TestCase):
     fixtures = ['test/users.json', ]
@@ -490,11 +500,8 @@ class ModelViewOptimization(TestCase):
 
         response = self.client.get('/model/sv/fetch/', {"_startRow":0, "_endRow":1000, "callback":"eric"})
         self.assertEquals(response.status_code, 200)
-
         response = self.client.get("/model/optimization/?obj_type=0")
-        uuid = get_task_uuid(self.client)
-        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
-
+        cleanup_task(self)
 
     def test_fba_job_submit1(self):
         print "\nTest     | ModelViewObjective   | /optimization for biomass\t",
@@ -515,8 +522,7 @@ class ModelViewOptimization(TestCase):
         response = self.client.get('/pathway/add/', {'arrow': '0', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'899 C00200', 'ko':'false'})
 
         response = self.client.get("/model/optimization/?obj_type=1")# biomass
-        uuid = get_task_uuid(self.client)
-        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
+        cleanup_task(self)
 
 class UploadTest(TestCase):
     fixtures = ['test/users.json', ]
@@ -548,6 +554,7 @@ class TestSbml(TestCase):
         response = self.client.get('/pathway/update/', {'arrow': '1', 'pathway': 'det00670', 'products':'2 C00234', 'reactants':'1 C00445', 'ko':'true', 'pk':'1655', 'reactionid':'R01655'})
         response = self.client.get('/pathway/add/', {'arrow': '1', 'pathway': 'BIOMASS', 'products':'BIOMASS', 'reactants':'1 ATP', 'ko':'true'})
         response = self.client.get('/model/sbml/')
+        # TODO(xuy): sbml should get cleaned up the moment the email is out.
         cleanup(['test_sbml.sbml',])
 
 class TestDFBA(TestCase):
@@ -566,8 +573,9 @@ class TestDFBA(TestCase):
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
         response = self.client.get('/model/dfba/', {'obj_type':'1','provided_email':'test_email@noreply.com',})
-        uuid = get_task_uuid(self.client)
-        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
+        cleanup_task(self)
+        # uuid = get_task_uuid(self.client)
+        # cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 class TestSvg(TestCase):
     fixtures = ['test/users.json', ]
@@ -598,8 +606,9 @@ class TestSvg(TestCase):
         self.assertTrue('Mail from MicrobesFlux -- SVG test_svg' in email.subject)
         self.assertTrue('test@noreply.com' in email.to)
         self.assertEquals('test_svg.svg', email.attachments[0][0])
-        files.append(uuid + '.adjlist')
-        cleanup(files)
+        cleanup_task(self)
+        # files.append(uuid + '.adjlist')
+        # cleanup(files)
 
 """ The following tests are ignored from this release
 class TestOpt(TestCase):
@@ -688,8 +697,9 @@ class TestToyOptimization(TestCase):
         f.close()
         self.assertTrue(response.content.find("Successfully Uploaded") != -1)
         response = self.client.get('/model/dfba/?obj_type=1')
-        uuid = get_task_uuid(self.client)
-        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
+        cleanup_task(self)
+        # uuid = get_task_uuid(self.client)
+        # cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
     def test_toy_fba(self):
         print "\nTest	  | TestToyOptimization	| fba for TOY\t",
@@ -700,8 +710,9 @@ class TestToyOptimization(TestCase):
         response = self.client.get('/model/bound/update/', {"pk":"2", "r":"Outflow2", "l":"6.4", "u":"6.4"})
         response = self.client.get('/model/bound/update/', {"pk":"9", "r":"Inflow1", "l":"11.0", "u":"11.0"})
         response = self.client.get('/model/optimization/?obj_type=1')
-        uuid = get_task_uuid(self.client)
-        cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
+        cleanup_task(self)
+        # uuid = get_task_uuid(self.client)
+        # cleanup([uuid + suffix for suffix in ['.ampl', '.map', '.header']])
 
 """ This tests the report composition module """
 class TestReportGenerate(TestCase):
@@ -720,8 +731,9 @@ class TestReportGenerate(TestCase):
         touch(files)
 
         response = self.client.get('/task/mail/', {"tid":tasks[0].task_id})
-        files.append(uuid + '.report')
-        cleanup(files)
+        cleanup_task(self)
+        # files.append(uuid + '.report')
+        # cleanup(files)
 
 class MoreBugCheck(TestCase):
     """ For bugs reported after Sept 1, 2011"""
