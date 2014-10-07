@@ -11,28 +11,30 @@ from email.MIMEMultipart import MIMEMultipart
 from django.http import HttpResponse
 
 COMMASPACE = ', '
-def send_mail(address, attachments, title = ""):
+def send_mail(address, attachment, title = ""):
     subject = 'Mail from MicrobesFlux --' + title
     fromaddr = "tanglab@seas.wustl.edu"
     toaddrs = [address, ]
-    content = "Dear MicrobesFlux User:  Thank you for using our website. -- MicrobesFlux"
+    content = "Dear MicrobesFlux User, thank you for using our website. -- MicrobesFlux"
     email = EmailMessage(subject, content, fromaddr, toaddrs)
 
     # Attachments.
     fs = FileSystemStorage()
-    for fname in attachments:
-        fp = fs.open(fname, "rb")
-        email.attach(fname, fp.read(), 'text/plain')
-        fp.close()
+    # Attachment is a pair: (uuid file name, user file name)
+    fp = fs.open(attachment[0], "rb")
+    email.attach(attachment[1], fp.read(), 'text/plain')
+    fp.close()
     email.send(fail_silently=False)
 
-def generate_report(report_name, report_file, file_uuid):
+def generate_report(file_uuid):
     fs = FileSystemStorage()
 
     report_header = file_uuid + '.header'
     ampl_file     = file_uuid + '.ampl'
     variable_map  = file_uuid + '.map'
     ampl_result   = file_uuid + '.result'
+    # report = concat(header, ampl, map, result)
+    report_file   = file_uuid + '.report'
 
     # Step 0. Write the report file
     finaloutput = fs.open(report_file, "w")
@@ -140,20 +142,17 @@ def task_mail(request):
     tid = request.GET['tid']
     try:
         task = Task.objects.get(task_id = tid)
-        report_name = task.main_file.split(".")[0]  # take the base name
+        model_name = task.main_file.split(".")[0]  # take the base name
         address = task.email
+        uuid = str(task.uuid)
         if task.task_type == "fba":
-            report_file = report_name + "_fba_report.txt"
-            generate_report(report_name, report_file, str(task.uuid))
-            send_mail(address, [report_file,], title = "FBA")
+            generate_report(uuid)
+            send_mail(address, (uuid + '.report', model_name + "_fba_report.txt"), title = "FBA")
         elif task.task_type == "dfba":
-            report_file = report_name + "_dfba_report.txt"
-            generate_report(report_name, report_file, str(task.uuid))
-            send_mail(address, [report_file,], title = "dFBA")
+            generate_report(uuid)
+            send_mail(address, (uuid + '.report', model_name + "_dfba_report.txt"), title = "dFBA")
         else:
-            # TODO(xuy): fix the file name here.
-            svg_file = task.uuid + ".svg"
-            send_mail(address, [svgfile,], title = "SVG file for model " + report_name)
+            send_mail(address, (uuid + '.svg', model_name +'.svg'), title = ' SVG ' + model_name)
         task.status = 'MAIL_SENT'
         task.save()
         return HttpResponse(content = """ Mail sent """, status = 200, content_type = "text/html")
