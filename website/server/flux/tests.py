@@ -3,7 +3,7 @@ import os, sys
 import logging
 import unittest
 
-logging.disable(logging.CRITICAL)
+# logging.disable(logging.CRITICAL)
 
 import django.core.mail
 from django.test import TestCase
@@ -442,7 +442,7 @@ class TaskTest(TestCase):
         self.assertTrue('Mail from MicrobesFlux --dFBA' in email.subject)
         self.assertTrue('test@noreply.com' in email.to)
         self.assertEquals('test_task_mail_dfba_report.txt', email.attachments[0][0])
-        files.append(name + '_dfba_report.txt')
+        files.append( uuid + '.report')
         cleanup(files)
 
 class ModelViewBoundTest(TestCase):
@@ -575,7 +575,7 @@ class TestSvg(TestCase):
     def test_svg(self):
         print "\nTest     | TestSvg   | /model/svg/\t",
         response = self.client.post('/user/login/', {'username': 'eric', 'password': '123'})
-        response = self.client.get('/collection/create/', {'collection_name': 'test_svg', 'bacteria': 'det D.ethenogenes', 'email':'xu.mathena@gmail.com'})
+        response = self.client.get('/collection/create/', {'collection_name': 'test_svg', 'bacteria': 'det D.ethenogenes', 'email':'test@noreply.com'})
         response = self.client.get('/pathway/fetch/', {'_startRow':0, '_endRow':1000})
         response = self.client.get('/model/svg/')
         tasks = Task.objects.all()
@@ -583,10 +583,23 @@ class TestSvg(TestCase):
         task = tasks[0]
         self.assertEquals(task.task_type, 'svg')
         self.assertEquals(task.main_file, 'test_svg')
-        self.assertEquals(task.email, 'xu.mathena@gmail.com')
+        self.assertEquals(task.email, 'test@noreply.com')
         self.assertEquals(task.status, 'TODO')
         uuid = get_task_uuid(self.client)
-        cleanup([uuid + '.adjlist',])
+        # Simulate the svg emailing logic.
+        files = [ uuid + suffix for suffix in ['.svg']]
+
+        touch(files)
+        response = self.client.get('/task/mail/', {"tid":task.task_id})
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.content, " Mail sent ")
+        self.assertEquals(1, len(django.core.mail.outbox))
+        email = django.core.mail.outbox[0]
+        self.assertTrue('Mail from MicrobesFlux -- SVG test_svg' in email.subject)
+        # self.assertTrue('test@noreply.com' in email.to)
+        self.assertEquals('test_svg.svg', email.attachments[0][0])
+        files.append(uuid + '.adjlist')
+        cleanup(files)
 
 """ The following tests are ignored from this release
 class TestOpt(TestCase):
@@ -707,7 +720,7 @@ class TestReportGenerate(TestCase):
         touch(files)
 
         response = self.client.get('/task/mail/', {"tid":tasks[0].task_id})
-        files.append(name + '_fba_report.txt')
+        files.append(uuid + '.report')
         cleanup(files)
 
 class MoreBugCheck(TestCase):
