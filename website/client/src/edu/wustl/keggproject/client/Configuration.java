@@ -27,7 +27,7 @@
 package edu.wustl.keggproject.client;
 
 public class Configuration {
-    private boolean debug = true;
+    private boolean debug = false;
     private String baseUrl = "http://www.microbesflux.org/flux/";
     private String debugUrl = "http://127.0.0.1:8000/";
     private String email = "";
