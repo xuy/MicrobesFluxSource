@@ -38,20 +38,15 @@ from view.collection_view import collection_select # not in JSONview
 from view.collection_view import collection_summary
 from view.collection_view import collection_saveas
 
-from task.task import task_list
+# Task management
 from task.task import task_add
 from task.task import task_remove
 from task.task import task_mail
 from task.task import task_mark
+from task.task import task_list         # Used by watchdog
+from task.task import task_prettylist   # Humanized list
+from task.task import task_cleanup
 
-# from debug import test_mail
-# from jsonview import file_upload
-# from jsonview import hello
-"""
-#from auth import login
-#from auth import logout
-#from auth import index
-"""
 urlpatterns = patterns('',
     (r'^pathway/add/', pathway_add),        # Test covered
     (r'^pathway/update/', pathway_update),  # Test covered
@@ -87,6 +82,8 @@ urlpatterns = patterns('',
     (r'^task/remove/', task_remove),
     (r'^task/mark/', task_mark),
     (r'^task/mail/', task_mail),
+    (r'^task/tasks/', task_prettylist),
+    (r'^task/cleanup/', task_cleanup),
     (r'^pathway/query/', pathway_reaction_query),
     # (r'^test/testmail/', test_mail),
 )

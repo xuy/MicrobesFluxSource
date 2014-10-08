@@ -1,0 +1,20 @@
+<table border="1">
+    <th>Task ID</th>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>User Email</th>
+    <th>Submitted On</th>
+    <th>File ID</th>
+    {% for task in tasks %}
+    <tr>
+    <td>{{ task.task_id }}</td>
+    <td>{{ task.main_file }}</td>
+    <td>{{ task.task_type }}</td>
+    <td>{{ task.status }}</td>
+    <td>{{ task.email }}</td>
+    <td>{{ task.submitted_date }}</td>
+    <td>{{ task.uuid }}</td>
+    </tr>
+    {% endfor %}
+</table>

@@ -195,8 +195,10 @@ def sbml(request):
     f = fs.open(n + ".sbml", "w")
     pathway.output_sbml(f, str(n))
     f.close()
-    attachments = [ n + ".sbml"]
-    send_mail(address, attachments, title="SBML")
+    # The first is the disk file to read from, the second is the file name used
+    # in email attachment.
+    attachment = ( n + ".sbml", n + '.sbml')
+    send_mail(address, attachment, title="SBML")
     return HttpResponse(content = "SBML file send.", status = 200, content_type = "text/html")
 
 def optimization(request):

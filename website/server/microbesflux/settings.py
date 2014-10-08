@@ -88,6 +88,10 @@ INSTALLED_APPS = (
 # SESSION_FILE_PATH = '/Users/exu/PlayGround/MicrobesFluxSource/website/server/session/'
 LOGIN_URL = '/'
 
+TEMPLATE_DIRS = (
+    BASE_DIR + '/templates/',
+)
+
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
