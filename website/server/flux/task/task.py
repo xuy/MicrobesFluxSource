@@ -187,6 +187,13 @@ def task_mail(request):
 
 from django.shortcuts import render
 from django.shortcuts import get_list_or_404
+
 def task_prettylist(request):
-    task_objects = get_list_or_404(Task)
+    all_task = Task.objects.all()
+    total = len(all_task)
+    if total > 50:
+        all_task = all_task[total-50:]  # take last 50
+    task_objects = []
+    for t in all_task:
+        task_objects.append(t)
     return render(request, 'table.html', {'tasks':task_objects})
