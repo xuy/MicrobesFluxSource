@@ -1,5 +1,8 @@
+from uuid import uuid4
+
 from django.contrib.auth.models import User
 from django.db import models
+
 from constants import user_filebase
 
 """ This Profile model describes a user's optimization problem
@@ -13,7 +16,7 @@ class Profile(models.Model):
     status      = models.CharField(max_length= 30)
     model_type  = models.CharField(max_length= 10)
     submitted   = models.BooleanField(default=False)
-    submitted_date = models.CharField(max_length=30)
+
 
 class Compound(models.Model):
     name      = models.CharField(max_length = 10)
@@ -26,12 +29,18 @@ class Compound(models.Model):
 class Task(models.Model):
     task_id   =  models.AutoField(primary_key = True)
     task_type =  models.CharField(max_length = 10)
+    # The following two fields are deprecated in favor of using uuid.
     main_file =  models.CharField(max_length = 50)
     additional_file =  models.CharField(max_length = 50)
     email     = models.EmailField(max_length = 75)
     status    = models.CharField(max_length = 10)
+    # Django stable release does not support UUIDField (yet).
+    uuid =  models.CharField(max_length=250, unique=True, null=False, blank=False, default=uuid4, editable = False)
+    submitted_date = models.DateTimeField(auto_now=True)
+
     def __unicode__(self):
-        return str(self.task_id) + "," + self.main_file + "," + self.task_type + "," + self.email + "," + self.status + "," + self.additional_file
+        information = [str(self.task_id), self.main_file, self.task_type, self.email, self.status, self.uuid, str(self.submitted_date)]
+        return ','.join(information)
 
 # User can save/load their models. We put the serialized PathwayNetwork
 # object in "Collection".

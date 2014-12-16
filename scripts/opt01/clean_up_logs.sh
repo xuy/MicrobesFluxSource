@@ -1,4 +1,4 @@
 #!/usr/bin/bash
-rm plotjob.sh.o*
-rm plotjob.sh.e*
-rm -f *.edu.ampl_lock
+
+rm solve_flux.sh.o*
+rm solve_flux.sh.e*

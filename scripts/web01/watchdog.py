@@ -1,53 +1,145 @@
 #!/usr/bin/python
+from task_constants import *
+from task_util import parse_task
+from file_transfer import transfer_file
+from file_transfer import run_command
+from scp import SCPException
 
-### TODO(xuy): change this to anisble script.
+import os.path
+import requests
+import urllib2
 import time
-from urllib import urlopen
-import subprocess
 
-while True:
-	time.sleep(5)
-	print "Check List"
-	f = urlopen("http://tanglab.engineering.wustl.edu/flux/task/list/")
-	list = []
-	for l in f:
-		list.append(l)
-	if not list:
-		continue
-	#l = list[0]
-	#if not l or l[0]!='2':
-	#	continue
-	for l in list:
-		print "Will parse log",
-		print l
-		ls = l.split(',')
-		tid, pro, type, email = ls[:4]
-		if len(ls) < 5:
-			continue
-		status = ls[4]
-		additional_file = ls[5]
-		print "additional file", additional_file
-		problem= pro
-		print "status is ", status
-		if status != "TODO":
-			continue
-		print "Going to handle task ", problem, " type ", type
-		if type == "$TYPE":
-			continue
-		elif type == "fba":
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".ampl  /home/research/xuy/ampl_to_run/", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem + " -v TID="+tid +" fbajob.sh", shell = True)
-		elif type == "svg":
-			print "watchdog is going to scp " + problem + " to to_plot"
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".adjlist /home/research/xuy/to_plot/", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem + " -v TID="+tid +" plotjob.sh", shell = True)
-		elif type == "dfba":
-			# print "Going to solve a dfba task", l
-			p = subprocess.Popen("scp -i /home/research/xuy/xuy-seas xuy@ssh.seas.wustl.edu:/project/research-www/tanglab/flux/temp/"+problem + ".ampl  /home/research/xuy/ampl_to_run/"+problem+"_dfba.ampl", shell = True)
-			p = subprocess.Popen('wget --spider \"http://tanglab.engineering.wustl.edu/flux/task/mark/?tid='+tid+'"', shell = True)
-			# and then give it as JOB to the qsub
-			p = subprocess.Popen("cd /home/research/xuy/script; qsub -v JOB=" + problem  + " -v TID="+tid +" dfbajob.sh", shell = True)
-		time.sleep(10)
-		break
+def mark_task(tid, status):
+    print "going to mark task " + tid + ' as ' + status
+    payload = {'tid': tid, 'status': status}
+    try:
+        r = requests.get(task_queue_mark, params = payload)
+        print r.url
+        print r.text
+    except requests.exceptions.RequestException, e:
+        print "Cannot mark task " + tid + ' to status ' + status
+        print e
+
+def copy_to_server(task):
+    task_type = task['type']
+    tid = task['id']
+    uuid = task['uuid']
+    print "Going to copy task uuid " + uuid  + " to server"
+    if task_type == "fba" or task_type == 'dfba':
+        filename = uuid + '.ampl'
+    else:   # svg
+        filename = uuid + '.adjlist'
+    if os.path.isfile(web_file_path  + filename):
+        transfer_file(web_file_path + filename, opt_file_path + filename)
+        return True
+    else:
+        mark_task(tid, 'FILE_MISS>')
+        return False
+
+def copy_from_server(task):
+    task_type = task['type']
+    tid = task['id']
+    uuid = task['uuid']
+    print "Going to copy task uuid " + uuid  + " from server"
+    if task_type == "fba" or task_type == 'dfba':
+        filename = uuid + '.result'
+    else:   # svg
+        filename = uuid + '.svg'
+    transfer_file(opt_file_path + filename,  web_file_path + filename, direction='get')
+
+def get_job_name(task_type):
+    """ Maps task type to the script name that will be submitted via qsub"""
+    if task_type == 'fba' or task_type == 'dfba':
+        return 'solve_flux.sh'
+    else:
+        return 'plot_network.sh'
+
+def parse_task_submission_output(stdout, stderr):
+    if len(stdout) > 1 or len(stdout) < 1:
+        print "unexpected output format ", stdout
+        return 
+    jobline = stdout[0]
+    if not jobline.startswith('Your job'):
+        print 'unexpected output for submitting jobs ' + jobline
+    qsub_info = jobline.split()
+    qsub_id = qsub_info[2]
+    qsub_job = qsub_info[3].strip('()"')
+    print qsub_id, qsub_job
+
+def submit_task(task):
+    task_type = task['type']
+    qsub_command = ['qsub',
+                    '-v UUID=' + task['uuid'],
+                    '-v TID=' + task['id'],
+                    get_job_name(task_type)]
+    command = []
+    command.append('cd ' + opt_script_path)
+    command.append(' '.join(qsub_command))
+    return run_command(';'.join(command))
+
+def handle_todo_task(task):
+    task_type = task['type']
+    uuid = task['uuid']
+    tid = task['id']
+    if not copy_to_server(task):
+        return 
+    mark_task(tid, 'INIT')
+    stdout, stderr = submit_task(task)
+    print stdout, stderr
+    parse_task_submission_output(stdout, stderr)
+
+def handle_end_task(task):
+    # Copy files from opt to local.
+    try:
+        copy_from_server(task)
+    except SCPException:
+        print "cannot copy file for task ", task
+        return
+    mark_task(task['id'], 'TO_MAIL')
+
+def mail_task(task):
+    try:
+        payload = { 'tid': task['id'] }
+        r = requests.get(task_queue_mail, params = payload)
+    except requests.exceptions.RequestException, e:
+        print "Cannot mail task " + tid 
+        print e
+
+from datetime import datetime
+import sys
+def run_forever():
+    while True:
+        print "{0}\r".format(datetime.now())
+        try:
+            r = requests.get(task_queue_list)
+        except requests.exceptions.RequestException, e:
+            # It should not crash the whole watchdog.
+            print e
+            continue
+        task_list = r.text.split('\n')
+        if not task_list or (len(task_list) == 1 and task_list[0] == ''):
+            time.sleep(5)
+            continue
+        for l in task_list:
+            task = parse_task(l)
+            if task['status'] == 'MAIL_SENT':
+                continue
+            print task
+            problem= task['name']
+            type = task['type']
+            status = task['status']
+            if status == 'TODO':
+                handle_todo_task(task)
+            elif status == 'OPT_END' or status == 'PLOT_END':
+                handle_end_task(task)
+            elif status == 'TO_MAIL':
+                print "Going to email task ", task
+                mail_task(task)
+            else:
+                pass
+            # time.sleep(task_delay_sec)
+        time.sleep(watchdog_interval_sec)
+
+if __name__ == '__main__':
+    run_forever()

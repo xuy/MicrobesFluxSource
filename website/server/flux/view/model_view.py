@@ -1,5 +1,6 @@
 # Model = FluxModel
 import os
+import datetime
 from time import gmtime, strftime
 
 from flux.models import Profile
@@ -147,7 +148,7 @@ def user_bound_update(request):
 from django.core.files.storage import FileSystemStorage
 import subprocess
 
-def write_pathway_for_plot(pathway, n):
+def write_pathway_for_plot(pathway, filename):
     node_adj = {}
     for rname, r in pathway.reactions.iteritems():
         if r.products and r.substrates:
@@ -160,7 +161,7 @@ def write_pathway_for_plot(pathway, n):
                     node_adj[s].append(r.name)
                     node_adj[r.name].append(p)
     fs = FileSystemStorage()
-    f = fs.open(n + ".adjlist", "w")
+    f = fs.open(filename + ".adjlist", "w")
     for key, item in node_adj.iteritems():
         f.write(key)
         f.write(' ')
@@ -174,10 +175,15 @@ def svg(request):
     pathway = get_pathway_from_request(request)
     n = request.session['collection_name']
     email = request.session['provided_email']
-    write_pathway_for_plot(pathway, n)
-    # Add a task to task queue.
-    t = Task(task_type = 'svg', main_file = n, email = email, additional_file = '', status = "TODO")
-    t.save()
+
+    task = Task(task_type = 'svg',
+                main_file = n,
+                email = email,
+                status = "TODO")
+    uuid = str(task.uuid)
+    write_pathway_for_plot(pathway, uuid)
+    # Add an SVG task to queue.
+    task.save()
     return HttpResponse(content = "SVG Task submitted", status = 200, content_type = "text/html")
 
 def sbml(request):
@@ -189,8 +195,10 @@ def sbml(request):
     f = fs.open(n + ".sbml", "w")
     pathway.output_sbml(f, str(n))
     f.close()
-    attachments = [ n + ".sbml"]
-    send_mail(address, attachments, title="SBML")
+    # The first is the disk file to read from, the second is the file name used
+    # in email attachment.
+    attachment = ( n + ".sbml", n + '.sbml')
+    send_mail(address, attachment, title="SBML")
     return HttpResponse(content = "SBML file send.", status = 200, content_type = "text/html")
 
 def optimization(request):
@@ -202,40 +210,29 @@ def optimization(request):
     ot = 'biomass'
     if obj_type == '0':  # customer defined
         ot = 'user'
-    fs = FileSystemStorage()
-    f = fs.open(n + ".ampl", "w")
-    mapf = fs.open( n + ".map", "w")
-    reportfile = fs.open(n + "_header.txt", "w")
-    pathway.output_ampl(f, mapf, reportfile, objective_type = ot )
-    f.close()
-    mapf.close()
-    reportfile.close()
 
-    t = Task(task_type = 'fba', main_file = n, email = email, additional_file = '', status = "TODO")
-    t.save()
+    # Add an FBA task.
+    task = Task(task_type = 'fba',
+                main_file = n,
+                email = email,
+                status = "TODO")
 
-    # Locate user data (if any) and update their profiles
-    u = request.user
-    pro = None
-
-    if not u.is_anonymous():
-        try:
-            pro = Profile.objects.get(user = u, name = n)
-        except Profile.DoesNotExist:
-            pass
-
-    if pro:
-        pro.status="submitted"
-        pro.model_type = "fba"
-        import datetime
-        pro.submitted_date = str(datetime.datetime.now())
-        pro.save()
+    # Get the uuid from task as file name prefix.
+    file_system = FileSystemStorage()
+    uuid = str(task.uuid)
+    ampl_file = file_system.open(uuid + ".ampl", "w")
+    variable_mapping = file_system.open(uuid + ".map", "w")
+    report_header = file_system.open(uuid + ".header", "w")
+    pathway.output_ampl(ampl_file, variable_mapping, report_header, objective_type = ot )
+    ampl_file.close()
+    variable_mapping.close()
+    report_header.close()
+    task.save()
 
     return HttpResponse(content = "New Optimization problem submitted .. ", status = 200, content_type = "text/html")
 
 
-""" Check names against all the user-defined pathway"""
-""" This function checks the validity of the user uploaded file"""
+""" Validate user uploaded file before sending it out for optimization."""
 def check_user_upload_file_format(pathway, f):
     if not f:
         print "can't read file"
@@ -269,30 +266,6 @@ def check_user_upload_file_format(pathway, f):
             return False
     return True
 
-""" This function checks the validity of the user uploaded file"""
-# TO delete
-def old_check_user_upload_file_format(f):
-    if not f:
-        return False
-    header = f.readline().split(",")
-    if header[0].lower() != "time":
-        return False# it has to be time
-    if header[1].lower() != "biomass":
-        return False
-    length = len(header)
-    current = -1.0
-    for lines in f:
-        try:
-            numbers = map(float, lines.split(","))
-        except:
-            return False
-        if len(numbers) != length:
-            return False
-        if numbers[0] <= current:
-            return False
-        current = numbers[0]
-    return True
-
 def file_upload(request):
     """ Upload a file  from client """
     q = request.POST
@@ -321,27 +294,39 @@ def dfba_solve(request):
     name = request.session["collection_name"]
     associated_file_key = request.session["dfba_upload"]
     email = request.session['provided_email']
+    task = Task(task_type = 'dfba',
+                main_file = name,
+                email = email,
+                status = "TODO")
 
-    # Use usl to assign a new key
-    fs = FileSystemStorage()
-    f = fs.open(name + ".ampl", "w")
-    mapf = fs.open( name + ".map", "w")
-    reportfile = fs.open(name + "_header.txt", "w")
+    file_system = FileSystemStorage()
+    uuid = str(task.uuid)
 
-    additional = fs.open("dfba/" + associated_file_key, "r")
+    user_upload_temp_filename = "dfba/" + associated_file_key
+    user_upload_temp_file = file_system.open(user_upload_temp_filename, "r")
+
+    ampl_file = file_system.open(uuid + ".ampl", "w")
+    variable_mapping = file_system.open(uuid + ".map", "w")
+    report_header = file_system.open(uuid + ".header", "w")
 
     obj_type = request.GET['obj_type']
     ot = 'biomass'	# 1 = biomass
     if obj_type == '0':  # 0 = customer defined
         ot = 'user'
-    pathway.output_ampl(f, mapf, reportfile, model_type="dfba", additional_file = additional, objective_type = ot)
-    additional.close()
 
-    f.close()
-    mapf.close()
-    reportfile.close()
-    t = Task(task_type = 'dfba', main_file = name, email = email, additional_file = associated_file_key, status = "TODO")
-    t.save()
+    pathway.output_ampl(ampl_file,
+                        variable_mapping,
+                        report_header,
+                        model_type="dfba",
+                        additional_file = user_upload_temp_file,
+                        objective_type = ot)
+    ampl_file.close()
+    variable_mapping.close()
+    report_header.close()
+    user_upload_temp_file.close()
+    # cleanup the temp file from user upload.
+    file_system.delete(user_upload_temp_filename)
+    task.save()
     return HttpResponse(content = "New DFBA optimization problem submitted .. ", status = 200, content_type = "text/html")
 
 # TODO(xuy): change this to a different file transport mechanism

@@ -39,7 +39,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class MicrobesFlux implements EntryPoint {
     public void onModuleLoad() {
         RootPanel rootPanel = RootPanel.get();
-        rootPanel.setSize("2000", "1000");
+        rootPanel.setWidth("100%");
 
         Image logoImage = new Image();
         logoImage.setUrl("media/logo.png");

@@ -65,11 +65,6 @@ def save_pathway(request, pathway):
     collection_name = request.session['collection_name']
     save_collection(user, collection_name, pathway)
 
-# TODO: use this aspect to automatically weave in save_pathway.
-def save_required(method):
-    return method in ["pathway_add", "pathway_update", "user_obj_update",
-                      "user_obj_fetch", "model_sv", "model_bound_fetch"]
-
 def new_get_json(method, input_params, pathway):
     r = ""
     if method == "pathway_add": # merged
