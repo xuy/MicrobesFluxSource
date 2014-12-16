@@ -13,3 +13,9 @@ constants_local.py
 settings_local.py
 .DS_store
 db.sqlite3
+
+# Python related 
+.Python
+bin/
+include/
+lib/
