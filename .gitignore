@@ -14,3 +14,9 @@ settings_local.py
 task_constants_local.py
 .DS_store
 db.sqlite3
+
+# Python related 
+.Python
+bin/
+include/
+lib/

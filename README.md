@@ -17,3 +17,4 @@ MicrobesFlux processes the following unique characteristics:
 Frontend (GWT) and backend (Django) code is stored under website.
 The script folder contains scripts for solving optimization problems remotely.
 The visualize folder contains files for visualize KGML files.
+
