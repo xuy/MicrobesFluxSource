@@ -3,11 +3,11 @@ import pprint
 from alias import *
 logger = logging.getLogger("default")
 
-""" 
-    Singleton class 
-    using the Borg design pattern
-"""
+
 class ReactionDB(object):
+    """ 
+    A singleton to denote the data base of all reactions known to KEGG.
+    """
     __hivemind = {} 
 
     def __init__(self):

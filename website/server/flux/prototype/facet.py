@@ -7,6 +7,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'flux.settings'
 print sys.path
 from constants import kegg_database
 from parser.keggpathway import *
+from parser.json import Json
 
 
 def generate_pathway(bac_name):
@@ -25,4 +26,6 @@ if __name__ == '__main__':
         bac_name = sys.argv[1]
         p = generate_pathway(bac_name)
         # print p.reactions['R04241']
-        # print p.reactions['R04241'].getJson()
+
+        # r = Json("object")
+        # print p.reactions['R04241'].get_json(r)
