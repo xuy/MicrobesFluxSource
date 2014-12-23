@@ -16,6 +16,9 @@ def write_pickle(data, file):
     cPickle.dump(data, f)
     f.close()
 
+# TODO: rewrite a Coefficient class that can represent these.
+# coefficients. They were ok to be changed to 1 for flux analysis,
+# but in general we should keep the symbolic value.
 def toint(s):
     if s == 'n':
         return 1

@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
 from parser.reaction import parse_reaction_part
+from parser.json import Json
 from flux.view.foundations import *
-from flux.view.json import Json
 from flux.utils.logger import log_handler
 
 digital_pattern = re.compile(r'.*(\d+)')
@@ -55,7 +55,8 @@ def _process_pathway_fetch(pathway):
         r = pathway.reactions[rname]
         if not r.products or not r.substrates:
             continue
-        json = r.getJson()
+        json = Json("object")
+        r.get_json(json)
         json.add_pair("pk", public_key)
         public_key += 1
         ret.add_item(json)
@@ -248,6 +249,7 @@ def pathway_reaction_query(request):
     reaction_name = q['reaction']
     pathway = get_pathway_from_request(request)
     r = pathway.reactions[reaction_name]
-    json = r.getJson()
+    json = Json("object")
+    r.get_json(json)
     return HttpResponse(content = json.__repr__(), status = 200, content_type = "text/html")
 

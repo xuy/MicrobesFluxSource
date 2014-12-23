@@ -86,7 +86,9 @@ class ReactionTest(TestCase):
         r.longname_map = {"A":"LongA", "B":"LongB", "C":"LongC", "D":"LongD"}
         r.ko = False
         expected = '{"reactionid":"Test","reactants":"3 LongC + 4 LongD","products":"1 LongA + 2 LongB","arrow":"===>","ko":false}'
-        result = r.getJson().__repr__()
+        json = Json("object")
+        r.get_json(json)
+        result = json.__repr__()
         self.assertEquals(expected, result)
 
 class JsonTest(TestCase):

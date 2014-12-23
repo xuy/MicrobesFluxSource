@@ -4,6 +4,7 @@
 import sys,os
 from constants import kegg_database
 from parser.keggpathway import *
+from parser.json import Json 
 
 def generate_pathway(bac_name):
     # kegg_database = "/Users/youxu/ProgramInput/kegg_database/"
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     else:
         bac_name = sys.argv[1]
         p = generate_pathway(bac_name)
-        
         print p.reactions['R04241']
-        print p.reactions['R04241'].getJson()
+        json = Json("object")
+        p.reactions['R04241'].get_json(json)
+        print json

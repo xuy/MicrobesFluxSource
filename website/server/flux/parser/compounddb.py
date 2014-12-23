@@ -1,5 +1,7 @@
 from flux.models import Compound
 
+# TODO: rework the logic here to decouple Compound for Reaction
+# and Compound for reaction.
 # This file uses mysql database to replace the old ReactionDB
 class CompoundDB:
     def is_a_valid_name(self, n):

@@ -118,12 +118,13 @@ def run_forever():
             print e
             continue
         task_list = r.text.split('\n')
-        print task_list
-        if not task_list:
+        if not task_list or (len(task_list) == 1 and task_list[0] == ''):
+            time.sleep(5)
             continue
         for l in task_list:
-            print l
             task = parse_task(l)
+            if task['status'] == 'MAIL_SENT':
+                continue
             print task
             problem= task['name']
             type = task['type']

@@ -1,8 +1,9 @@
-from flux.view.json import Json
-
+from json import Json
 """
-    # TODO
-    2. filter out the plus sign 
+TODOs:
+	1. extract out the logic of long/short names. Long/short name translation 
+	   should be provided as a function on Compound. 
+	 
 """
 
 def parse_reaction_part(compond_string):
@@ -19,9 +20,10 @@ def parse_reaction_part(compond_string):
             name = test[1]
     result.append(name)
     return (coef, result)
-    
+
+
 class Reaction:
-    
+    """ Reaction represents a reaction in KEGG """
     def __init__(self, name):
         self.name = name
         self.longname_map = {}
@@ -81,9 +83,9 @@ class Reaction:
             r.append(str(self._get_long_name(t)))
         return r
 
-    def getJson(self):
+    def get_json(self, r):
         """ Return a JSON object representing this reaction. """
-        r = Json("object")
+        # r = Json("object")
         r.add_pair("reactionid", self.name)
         s = []
         for t in self.substrates:
@@ -101,14 +103,40 @@ class Reaction:
         ko_label = Json()
         ko_label.set_label('"ko"')
         ko_value = Json()
-
         if self.ko:
             ko_value.set_label("true")
         else:
             ko_value.set_label("false")
-
         r.add_pair(ko_label, ko_value)
+        
         if self.metabolism:
             r.add_pair("pathway", self.metabolism)
         return r
-    
+"""
+class ReactionEncoder(json.JSONEncoder):
+    def default(self, reaction):
+    	json = {}
+    	json['reaction_id'] = reaction.name
+    	s = []
+        for t in reaction.substrates:
+            s.append(str(reaction.stoichiometry[t]) + ' ' + reaction._get_long_name(t))
+        json['reactants'] = ' + '.join(s)
+    	s = []
+        for t in reaction.products:
+            s.append(str(reaction.stoichiometry[t]) + ' ' + reaction._get_long_name(t))
+        json['products'] = ' + '.join(s)
+        
+        if reaction.reversible:
+            json['arrow'] = "<==>"
+        else:
+            json['arrow'] = "===>"
+        
+        if reaction.ko:
+            json['ko'] = 'true'
+        else:
+            json['ko'] = 'false'
+		
+        if reaction.metabolism:
+            json['pathway'] = reaction.metabolism
+        return json
+"""
